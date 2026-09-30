@@ -1,0 +1,1923 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f2ed">
+    <title>Blopity Maps | European road nodes</title>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://tile.openstreetmap.org">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: light;
+            --paper: #f3f2ed;
+            --panel: #fffefa;
+            --ink: #202824;
+            --muted: #737b75;
+            --line: #e4e5de;
+            --green: #247455;
+            --green-deep: #174e3b;
+            --lime: #e2f29b;
+            --orange: #d56b42;
+            --blue: #347da0;
+            --shadow: 0 10px 34px rgb(35 45 37 / 9%);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background: var(--paper);
+            font: 14px/1.45 Manrope, sans-serif;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            color: inherit;
+        }
+
+        .app {
+            height: 100dvh;
+            min-height: 600px;
+            display: grid;
+            grid-template-rows: 62px minmax(0, 1fr);
+            overflow: hidden;
+        }
+
+        .topbar {
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            padding: 0 24px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 210px;
+            color: var(--ink);
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            background: var(--green);
+            border-radius: 8px;
+        }
+
+        .brand-mark svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .brand-name {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        .brand-name span {
+            color: var(--green);
+        }
+
+        .nav-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .release-tag {
+            padding: 5px 8px;
+            color: var(--green-deep);
+            background: #edf5eb;
+            border: 1px solid #dbe9d8;
+            border-radius: 5px;
+            font: 9px 'DM Mono', monospace;
+            white-space: nowrap;
+        }
+
+        .topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            background: #6aab74;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px #6aab7420;
+        }
+
+        .keycap {
+            padding: 4px 7px;
+            color: var(--muted);
+            background: #f5f5f1;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            font: 10px 'DM Mono', monospace;
+        }
+
+        .workspace {
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 350px minmax(0, 1fr);
+        }
+
+        .sidebar {
+            z-index: 400;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--panel);
+            border-right: 1px solid var(--line);
+        }
+
+        .side-head {
+            padding: 23px 20px 16px;
+        }
+
+        .eyebrow {
+            margin: 0 0 7px;
+            color: var(--green);
+            font: 10px 'DM Mono', monospace;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 23px;
+            font-weight: 800;
+            letter-spacing: 0;
+            line-height: 1.15;
+        }
+
+        .subhead {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .search-wrap {
+            position: relative;
+            margin: 0 16px 13px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            width: 16px;
+            height: 16px;
+            color: #818982;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .search {
+            width: 100%;
+            height: 40px;
+            padding: 0 42px 0 37px;
+            outline: none;
+            color: var(--ink);
+            background: #f8f8f4;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            font-size: 12px;
+        }
+
+        .search:focus {
+            border-color: #8eaf9b;
+            box-shadow: 0 0 0 3px #24745518;
+        }
+
+        .search::placeholder {
+            color: #9a9f98;
+        }
+
+        .search-hint {
+            position: absolute;
+            top: 50%;
+            right: 9px;
+            transform: translateY(-50%);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 7px;
+            padding: 0 16px 14px;
+            overflow-x: auto;
+        }
+
+        .filter-chip {
+            flex: 0 0 auto;
+            height: 28px;
+            padding: 0 10px;
+            cursor: pointer;
+            color: #59635d;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            transition: background .16s, border-color .16s, color .16s;
+        }
+
+        .filter-chip:hover {
+            border-color: #a9b7aa;
+        }
+
+        .filter-chip[aria-pressed="true"] {
+            color: var(--green-deep);
+            background: #edf5eb;
+            border-color: #b7d1b7;
+        }
+
+        .filter-chip.critical[aria-pressed="true"] {
+            color: #79501e;
+            background: #fbf2d6;
+            border-color: #e9d69c;
+        }
+
+        .list-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 11px 19px 9px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font: 10px 'DM Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .sort-button {
+            padding: 4px 0 4px 6px;
+            cursor: pointer;
+            color: var(--green);
+            background: none;
+            border: 0;
+            font: inherit;
+            text-transform: uppercase;
+        }
+
+        .node-list {
+            min-height: 0;
+            flex: 1;
+            overflow: auto;
+            scrollbar-color: #d3d7ce transparent;
+            scrollbar-width: thin;
+        }
+
+        .node-row {
+            position: relative;
+            display: grid;
+            width: 100%;
+            grid-template-columns: 35px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 19px;
+            text-align: left;
+            cursor: pointer;
+            background: transparent;
+            border: 0;
+            border-top: 1px solid #eff0eb;
+            transition: background .14s;
+        }
+
+        .node-row:hover,
+        .node-row[aria-current="true"] {
+            background: #f4f7f1;
+        }
+
+        .node-row[aria-current="true"]::before {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 3px;
+            content: '';
+            background: var(--green);
+        }
+
+        .row-rank {
+            color: #a1a69f;
+            font: 10px 'DM Mono', monospace;
+        }
+
+        .row-main {
+            min-width: 0;
+        }
+
+        .row-city {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow: hidden;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .country-code {
+            color: #929a91;
+            font: 9px 'DM Mono', monospace;
+        }
+
+        .priority-star {
+            color: #c38825;
+            font-size: 10px;
+        }
+
+        .row-detail {
+            display: flex;
+            gap: 7px;
+            margin-top: 3px;
+            color: #8a9189;
+            font: 9px 'DM Mono', monospace;
+        }
+
+        .row-score {
+            min-width: 39px;
+            color: var(--green-deep);
+            font: 13px 'DM Mono', monospace;
+            text-align: right;
+        }
+
+        .empty-state {
+            padding: 25px 20px;
+            color: var(--muted);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .sidebar-foot {
+            padding: 11px 17px;
+            background: #fafaf7;
+            border-top: 1px solid var(--line);
+            color: #858c83;
+            font-size: 9px;
+            line-height: 1.55;
+        }
+
+        .map-shell {
+            position: relative;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+            background: #e9ede5;
+        }
+
+        #map {
+            position: absolute;
+            inset: 0;
+            background: #e9ede5;
+        }
+
+        .leaflet-container {
+            color: var(--ink);
+            font-family: Manrope, sans-serif;
+        }
+
+        .leaflet-tile-pane {
+            filter: saturate(.68) brightness(1.04);
+        }
+
+        .leaflet-control-zoom {
+            border: 1px solid #dfe2da !important;
+            box-shadow: 0 3px 12px #17281a12 !important;
+        }
+
+        .leaflet-control-zoom a {
+            color: #34463a !important;
+            border-color: #e7e9e2 !important;
+        }
+
+        .map-topline {
+            position: absolute;
+            z-index: 450;
+            top: 16px;
+            left: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .map-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 11px;
+            color: #344139;
+            background: #fffefaed;
+            border: 1px solid #e2e4dc;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px #1d2e1c0d;
+            font-size: 10px;
+            font-weight: 700;
+            backdrop-filter: blur(8px);
+        }
+
+        .map-pill strong {
+            font: 11px 'DM Mono', monospace;
+        }
+
+        .pill-mark {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+        }
+
+        .map-actions {
+            position: absolute;
+            z-index: 450;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            gap: 7px;
+        }
+
+        .route-focus-control {
+            height: 37px;
+            width: 160px;
+        }
+
+        .route-focus-control select {
+            width: 100%;
+            height: 100%;
+            padding: 0 28px 0 10px;
+            cursor: pointer;
+            color: #46534a;
+            background: #fffefaed;
+            border: 1px solid #e2e4dc;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px #1d2e1c0d;
+            font-size: 10px;
+            font-weight: 700;
+            backdrop-filter: blur(8px);
+        }
+
+        .route-focus-control select:focus-visible {
+            outline: 2px solid #247455;
+            outline-offset: 2px;
+        }
+
+        .planner-toggle {
+            min-height: 37px;
+            padding: 0 11px;
+            cursor: pointer;
+            color: #fffefa;
+            background: var(--green);
+            border: 1px solid var(--green);
+            border-radius: 6px;
+            box-shadow: 0 2px 10px #1d2e1c0d;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .planner-toggle:hover {
+            background: var(--green-deep);
+        }
+
+        .planner-panel {
+            position: absolute;
+            z-index: 460;
+            top: 62px;
+            left: 16px;
+            width: min(340px, calc(100% - 32px));
+            max-height: calc(100% - 145px);
+            overflow: auto;
+            padding: 15px;
+            background: var(--panel);
+            border: 1px solid #e2e4dc;
+            border-radius: 7px;
+            box-shadow: var(--shadow);
+        }
+
+        .planner-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .planner-heading h2 {
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .planner-fields {
+            display: grid;
+            gap: 9px;
+        }
+
+        .planner-field {
+            display: grid;
+            gap: 4px;
+            color: #657068;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .planner-field select {
+            width: 100%;
+            height: 36px;
+            padding: 0 9px;
+            color: var(--ink);
+            background: #f8f8f4;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            font: 11px Manrope, sans-serif;
+        }
+
+        .planner-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .planner-ferry-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #59635d;
+            font-size: 10px;
+        }
+
+        .planner-ferry-option input {
+            width: 14px;
+            height: 14px;
+            margin: 0;
+            accent-color: var(--green);
+        }
+
+        .planner-submit {
+            min-height: 34px;
+            padding: 0 11px;
+            cursor: pointer;
+            color: white;
+            background: var(--green);
+            border: 1px solid var(--green);
+            border-radius: 5px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .planner-submit:hover {
+            background: var(--green-deep);
+        }
+
+        .planner-result {
+            margin-top: 12px;
+            padding-top: 11px;
+            border-top: 1px solid var(--line);
+        }
+
+        .planner-result[hidden] {
+            display: none;
+        }
+
+        .planner-result-title {
+            margin: 0 0 6px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .planner-result-meta {
+            color: var(--green-deep);
+            font: 12px 'DM Mono', monospace;
+        }
+
+        .planner-stops {
+            margin: 9px 0;
+            color: #536057;
+            font-size: 10px;
+            line-height: 1.7;
+        }
+
+        .planner-note {
+            margin: 8px 0 0;
+            color: #858c83;
+            font-size: 9px;
+            line-height: 1.5;
+        }
+
+        .planner-error {
+            margin: 0;
+            color: #a34d31;
+            font-size: 10px;
+        }
+
+        .route-focus-count {
+            position: absolute;
+            top: 43px;
+            right: 44px;
+            padding: 4px 7px;
+            color: #fff;
+            background: #174e3b;
+            border-radius: 4px;
+            font: 9px 'DM Mono', monospace;
+        }
+
+        .route-focus-count:empty {
+            display: none;
+        }
+
+        .layer-panel {
+            position: absolute;
+            z-index: 460;
+            top: 61px;
+            right: 16px;
+            width: 230px;
+            padding: 12px 14px;
+            background: #fffefa;
+            border: 1px solid #e2e4dc;
+            border-radius: 7px;
+            box-shadow: var(--shadow);
+        }
+
+        .layer-heading {
+            margin: 0 0 9px;
+            color: #858c83;
+            font: 9px 'DM Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .layer-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px 8px;
+        }
+
+        .layer-option {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            color: #46534a;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .layer-option input {
+            width: 14px;
+            height: 14px;
+            margin: 0;
+            accent-color: var(--green);
+        }
+
+        .layer-note {
+            margin: 9px 0 0;
+            color: #8a9189;
+            font-size: 9px;
+        }
+
+        .icon-button {
+            width: 37px;
+            height: 37px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            color: #46534a;
+            background: #fffefaed;
+            border: 1px solid #e2e4dc;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px #1d2e1c0d;
+            backdrop-filter: blur(8px);
+        }
+
+        .icon-button:hover {
+            color: var(--green);
+            background: #fff;
+        }
+
+        .icon-button svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .map-legend {
+            position: absolute;
+            z-index: 450;
+            right: 16px;
+            bottom: 23px;
+            width: 176px;
+            padding: 12px 13px;
+            background: #fffefaed;
+            border: 1px solid #e2e4dc;
+            border-radius: 6px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }
+
+        .legend-title {
+            margin: 0 0 9px;
+            color: #858c83;
+            font: 9px 'DM Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 7px 0;
+            color: #59635c;
+            font-size: 10px;
+        }
+
+        .legend-swatch {
+            width: 19px;
+            height: 0;
+            border-top: 3px solid var(--green);
+        }
+
+        .legend-swatch.e-road {
+            border-color: #d29a35;
+        }
+
+        .legend-swatch.ferry {
+            border-top: 2px dashed #367fa0;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--green);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 0 1px var(--green);
+        }
+
+        .legend-dot.major {
+            background: #e0a43e;
+            box-shadow: 0 0 0 1px #b77d23;
+        }
+
+        .detail-panel {
+            position: absolute;
+            z-index: 460;
+            top: 68px;
+            right: 16px;
+            width: 300px;
+            max-height: calc(100% - 170px);
+            overflow: auto;
+            padding: 17px;
+            background: var(--panel);
+            border: 1px solid #e2e4dc;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            animation: panel-in .2s ease-out;
+        }
+
+        @keyframes panel-in {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .detail-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .detail-country {
+            margin: 0 0 4px;
+            color: var(--green);
+            font: 9px 'DM Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .detail-name {
+            margin: 0;
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        .close-button {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            flex: 0 0 auto;
+            place-items: center;
+            cursor: pointer;
+            color: #788078;
+            background: transparent;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+        }
+
+        .detail-scoreline {
+            display: flex;
+            align-items: baseline;
+            gap: 7px;
+            margin: 15px 0 13px;
+        }
+
+        .detail-score {
+            color: var(--green-deep);
+            font: 34px 'DM Mono', monospace;
+            line-height: 1;
+        }
+
+        .score-caption {
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .detail-section {
+            padding: 11px 0;
+            border-top: 1px solid var(--line);
+        }
+
+        .detail-label {
+            margin: 0 0 7px;
+            color: #848c83;
+            font: 9px 'DM Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .detail-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .route-tag {
+            padding: 4px 7px;
+            color: #76551a;
+            background: #faf3df;
+            border: 1px solid #f0e3bd;
+            border-radius: 4px;
+            font: 10px 'DM Mono', monospace;
+        }
+
+        .route-tag.motorway {
+            color: #35644e;
+            background: #edf5eb;
+            border-color: #dbe9d8;
+        }
+
+        .route-tag.ferry {
+            color: #306f8a;
+            background: #eaf3f7;
+            border-color: #d4e7ef;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-cell {
+            padding: 8px;
+            background: #f7f8f3;
+            border-radius: 5px;
+        }
+
+        .stat-value {
+            display: block;
+            font: 13px 'DM Mono', monospace;
+        }
+
+        .stat-name {
+            display: block;
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        .score-breakdown {
+            display: grid;
+            gap: 5px;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            color: #657068;
+            font-size: 10px;
+        }
+
+        .score-row strong {
+            color: var(--ink);
+            font: 10px 'DM Mono', monospace;
+        }
+
+        .score-total {
+            padding-top: 6px;
+            border-top: 1px solid var(--line);
+            color: var(--green-deep);
+            font-weight: 800;
+        }
+
+        .method-button {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 11px 14px;
+            cursor: pointer;
+            text-align: left;
+            color: #556159;
+            background: #fffefaed;
+            border: 1px solid #e2e4dc;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px #1d2e1c0d;
+            font-size: 10px;
+            font-weight: 700;
+            backdrop-filter: blur(8px);
+        }
+
+        .method-button:hover {
+            color: var(--green);
+        }
+
+        .method-panel {
+            position: absolute;
+            z-index: 460;
+            right: 16px;
+            bottom: 225px;
+            width: min(310px, calc(100% - 32px));
+            padding: 15px;
+            background: var(--panel);
+            border: 1px solid #e2e4dc;
+            border-radius: 7px;
+            box-shadow: var(--shadow);
+        }
+
+        .method-panel h2 {
+            margin: 0 0 8px;
+            font-size: 13px;
+        }
+
+        .formula {
+            padding: 9px;
+            color: var(--green-deep);
+            background: #f0f5ec;
+            border-radius: 4px;
+            font: 11px/1.7 'DM Mono', monospace;
+        }
+
+        .method-panel p {
+            margin: 8px 0 0;
+            color: #6d766e;
+            font-size: 10px;
+        }
+
+        .mobile-list-toggle {
+            display: none;
+        }
+
+        .fallback {
+            position: absolute;
+            inset: 0;
+            z-index: 300;
+            display: none;
+            place-items: center;
+            padding: 30px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        @media (max-width: 760px) {
+            .app {
+                min-height: 500px;
+                grid-template-rows: 54px minmax(0, 1fr);
+            }
+
+            .topbar {
+                gap: 12px;
+                padding: 0 14px;
+            }
+
+            .brand {
+                min-width: 0;
+            }
+
+            .nav-label,
+            .keycap {
+                display: none;
+            }
+
+            .live-indicator {
+                font-size: 0;
+            }
+
+            .workspace {
+                position: relative;
+                grid-template-columns: 1fr;
+            }
+
+            .map-shell {
+                grid-column: 1;
+                grid-row: 1;
+            }
+
+            .sidebar {
+                position: absolute;
+                z-index: 480;
+                top: 10px;
+                bottom: 10px;
+                left: 10px;
+                width: min(350px, calc(100% - 20px));
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                box-shadow: var(--shadow);
+                transform: translateX(calc(-100% - 14px));
+                transition: transform .22s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .side-head {
+                padding-top: 17px;
+            }
+
+            .mobile-list-toggle {
+                position: absolute;
+                z-index: 450;
+                top: 16px;
+                left: 16px;
+                width: 40px;
+                height: 40px;
+                display: grid;
+                place-items: center;
+                cursor: pointer;
+                color: #34463a;
+                background: #fffefaed;
+                border: 1px solid #e2e4dc;
+                border-radius: 6px;
+                box-shadow: 0 2px 10px #1d2e1c0d;
+            }
+
+            .map-topline {
+                top: 65px;
+                left: 16px;
+            }
+
+            .map-actions {
+                top: 16px;
+                right: 16px;
+            }
+
+            .route-focus-control {
+                width: 136px;
+            }
+
+            .release-tag {
+                padding: 4px 6px;
+                font-size: 8px;
+            }
+
+            .planner-panel {
+                top: 112px;
+                left: 10px;
+                width: min(340px, calc(100% - 20px));
+                max-height: calc(100% - 220px);
+            }
+
+            .layer-panel {
+                top: 61px;
+                right: 10px;
+                width: 220px;
+            }
+
+            .map-legend {
+                right: 12px;
+                bottom: 13px;
+                width: 155px;
+                padding: 10px;
+            }
+
+            .detail-panel {
+                top: 112px;
+                right: 10px;
+                width: min(300px, calc(100% - 20px));
+                max-height: calc(100% - 215px);
+            }
+
+            .method-button {
+                width: 38px;
+                height: 38px;
+                justify-content: center;
+                padding: 0;
+                overflow: hidden;
+                font-size: 0;
+            }
+
+            .method-button::before {
+                content: '?';
+                font: 700 15px Manrope, sans-serif;
+            }
+
+            .method-button span {
+                display: none;
+            }
+
+            .method-panel {
+                right: 10px;
+                bottom: 176px;
+            }
+
+            .sidebar-foot {
+                font-size: 9px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <header class="topbar">
+            <a class="brand" href="#" aria-label="Blopity Maps home">
+                <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 18.5 9.2 6l4 12.5L18.8 6" stroke="#e2f29b" stroke-width="2.3" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <circle cx="5" cy="18.5" r="2" fill="white" />
+                        <circle cx="9.2" cy="6" r="2" fill="white" />
+                        <circle cx="13.2" cy="18.5" r="2" fill="white" />
+                        <circle cx="18.8" cy="6" r="2" fill="white" />
+                    </svg></span>
+                <span class="brand-name">blopity <span>maps</span></span>
+            </a>
+            <span class="nav-label">EUROPEAN ROAD NETWORK</span>
+            <span class="release-tag">VERSION 1 · A BETTER OVERHAUL IS COMING SOON</span>
+            <div class="topbar-right"><span class="live-indicator"><i class="live-dot"></i>NETWORK VIEW</span><span
+                    class="keycap">ESC</span></div>
+        </header>
+        <main class="workspace">
+            <aside class="sidebar" id="sidebar" aria-label="Map nodes">
+                <div class="side-head">
+                    <p class="eyebrow">THE CONTINENT, CONNECTED</p>
+                    <h1>THE NO-NONSENSE<br>TRAVEL ROUTE PLANNER</h1>
+                    <p class="subhead">Population is a factor. Connectivity is the point.</p>
+                </div>
+                <label class="search-wrap">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8" />
+                        <path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                    <input class="search" id="search" type="search" placeholder="Find a place or road…"
+                        autocomplete="off" aria-label="Find a place or road">
+                    <span class="keycap search-hint">/</span>
+                </label>
+                <div class="filter-row" aria-label="Filter nodes">
+                    <button class="filter-chip" data-filter="all" aria-pressed="true">All nodes</button>
+                    <button class="filter-chip critical" data-filter="priority" aria-pressed="false">3+ E
+                        segments</button>
+                    <button class="filter-chip" data-filter="ferry" aria-pressed="false">Ferries</button>
+                </div>
+                <div class="list-meta"><span id="result-count">NODES</span><button class="sort-button" id="sort-button"
+                        title="Sort by score" aria-label="Sort by score">SCORE ↓</button></div>
+                <div class="node-list" id="node-list" role="list"></div>
+                <footer class="sidebar-foot">Planning model, not a live routing service. Scores use rounded
+                    agglomeration estimates and curated corridor counts. Click any node to see the inputs.</footer>
+            </aside>
+            <section class="map-shell" aria-label="Interactive European road network map">
+                <div id="map" role="application" aria-label="Map of strategic European road nodes"></div>
+                <div class="fallback" id="fallback">The map needs an internet connection to load its map tiles. Your
+                    node list and search still work.</div>
+                <button class="mobile-list-toggle" id="mobile-list-toggle" title="Open node list"
+                    aria-label="Open node list"><svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+                        <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.8"
+                            stroke-linecap="round" />
+                    </svg></button>
+                <div class="map-topline"><span class="map-pill"><i class="pill-mark"></i><strong
+                            id="map-node-count">0</strong> NODES</span><span class="map-pill"><strong
+                            id="priority-count">0</strong> WITH 3+ E SEGMENTS</span></div>
+                <div class="map-actions">
+                    <button class="planner-toggle" id="planner-toggle" aria-controls="planner-panel"
+                        aria-expanded="false">PLAN ROUTE</button>
+                    <label class="route-focus-control">
+                        <select id="edge-focus" aria-label="Highlight a road corridor">
+                            <option value="">Highlight a road</option>
+                        </select>
+                    </label>
+                    <button class="icon-button" id="layers-toggle" title="Map layers" aria-label="Map layers"
+                        aria-controls="layer-panel" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 6h16M7 12h10m-7 6h4" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" />
+                            <circle cx="9" cy="6" r="2" fill="#fffefa" stroke="currentColor" stroke-width="1.6" />
+                            <circle cx="15" cy="12" r="2" fill="#fffefa" stroke="currentColor" stroke-width="1.6" />
+                            <circle cx="11" cy="18" r="2" fill="#fffefa" stroke="currentColor" stroke-width="1.6" />
+                        </svg></button>
+                    <button class="method-button" title="How the score works" aria-label="How the score works"><span>HOW
+                            SCORE WORKS</span></button>
+                    <button class="icon-button" id="fit-button" title="Fit all nodes" aria-label="Fit all nodes"><svg
+                            viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                            <path d="m8 8 8 8m0-8-8 8" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg></button>
+                </div>
+                <span class="route-focus-count" id="route-focus-count" aria-live="polite"></span>
+                <section class="planner-panel" id="planner-panel" hidden aria-labelledby="planner-title">
+                    <div class="planner-heading">
+                        <h2 id="planner-title">Plan a route</h2>
+                        <button class="close-button" id="close-planner" title="Close route planner"
+                            aria-label="Close route planner">×</button>
+                    </div>
+                    <div class="planner-fields">
+                        <label class="planner-field" for="route-origin">From
+                            <select id="route-origin">
+                                <option value="">Choose a start node</option>
+                            </select>
+                        </label>
+                        <label class="planner-field" for="route-destination">To
+                            <select id="route-destination">
+                                <option value="">Choose a destination</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="planner-options">
+                        <label class="planner-ferry-option"><input id="route-allow-ferries" type="checkbox" checked>
+                            Include car ferries</label>
+                        <div>
+                            <button class="planner-submit" id="clear-route">Clear</button>
+                            <button class="planner-submit" id="find-route">Find route</button>
+                        </div>
+                    </div>
+                    <div class="planner-result" id="planner-result" hidden aria-live="polite"></div>
+                    <p class="planner-note">Version 1 uses the curated node graph. Distances are estimates, not
+                        turn-by-turn navigation; check current roads, ferries, and closures before travel.</p>
+                </section>
+                <section class="layer-panel" id="layer-panel" hidden aria-label="Map network layers">
+                    <p class="layer-heading">SHOW NETWORK TYPES</p>
+                    <div class="layer-options">
+                        <label class="layer-option"><input type="checkbox" data-layer="eroad" checked> E-roads</label>
+                        <label class="layer-option"><input type="checkbox" data-layer="motorway" checked>
+                            Motorways</label>
+                        <label class="layer-option"><input type="checkbox" data-layer="other" checked> Other
+                            roads</label>
+                        <label class="layer-option"><input type="checkbox" data-layer="ferry" checked> Car
+                            ferries</label>
+                    </div>
+                    <p class="layer-note">Road types combine when a corridor carries more than one designation.</p>
+                </section>
+                <aside class="detail-panel" id="detail-panel" hidden aria-live="polite"></aside>
+                <div class="map-legend" aria-label="Map legend">
+                    <p class="legend-title">WHAT YOU'RE SEEING</p>
+                    <div class="legend-row"><i class="legend-dot"></i>Node (important place/junction)</div>
+                    <div class="legend-row"><i class="legend-swatch e-road"></i>E-road corridor</div>
+                    <div class="legend-row"><i class="legend-swatch"></i>Motorway corridor</div>
+                    <div class="legend-row"><i class="legend-swatch ferry"></i>Car ferry</div>
+                </div>
+                <div class="method-panel" id="method-panel" hidden>
+                    <h2>Node priority score</h2>
+                    <div class="formula">P = 10 log₁₀(A) + 4E + 1.0Aᵤ<br>+ 0.35M + 2.5J + 1.5F + 1.5T</div>
+                    <p>A = agglomeration population · E = distinct E-road numbers · Aᵤ = major non-German motorway
+                        corridors · M = German Autobahns · J = significant junctions · F = international car-ferry link
+                        · T = verified E-road termini at the node.
+                    </p>
+                    <p>Node inclusion also checks directional segments separately: E39 north and south are two segments;
+                        E39 plus E16 makes three. Links are generalized corridors, not turn-by-turn routes.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        // A directional E-road segment is one distinct corridor leg at a node.
+        // This intentionally treats, for example, E39 north and E39 south as two.
+        const nodes = [
+            { id: 'london', name: 'London', country: 'United Kingdom', code: 'GB', lat: 51.507, lon: -0.128, population: 9500000, e: ['E15 north', 'E15 south', 'E30 east', 'E30 west'], au: ['M1', 'M4', 'M25'], m: [], j: 5, ferry: false },
+            { id: 'paris', name: 'Paris', country: 'France', code: 'FR', lat: 48.857, lon: 2.352, population: 11000000, e: ['E5 north', 'E5 south', 'E15 north', 'E15 south', 'E50 east', 'E50 west'], au: ['A1', 'A4', 'A6', 'A10'], m: [], j: 7, ferry: false },
+            { id: 'brussels', name: 'Brussels', country: 'Belgium', code: 'BE', lat: 50.85, lon: 4.352, population: 2500000, e: ['E19 north', 'E19 south', 'E40 east', 'E40 west', 'E411 south'], au: ['A1', 'A3', 'A4'], m: [], j: 5, ferry: false },
+            { id: 'amsterdam', name: 'Amsterdam', country: 'Netherlands', code: 'NL', lat: 52.368, lon: 4.904, population: 2500000, e: ['E19 north', 'E19 south', 'E22 east', 'E22 west', 'E35 south'], au: ['A1', 'A2', 'A4', 'A10'], m: [], j: 5, ferry: false },
+            { id: 'rotterdam', name: 'Rotterdam', country: 'Netherlands', code: 'NL', lat: 51.925, lon: 4.478, population: 2300000, e: ['E19 north', 'E19 south', 'E25 east', 'E25 west', 'E30 east', 'E30 west'], au: ['A15', 'A16', 'A20'], m: [], j: 5, ferry: true, ferryLabel: 'Rotterdam–Hull' },
+            { id: 'harwich', name: 'Harwich', country: 'United Kingdom', code: 'GB', lat: 51.954, lon: 1.284, population: 20000, e: [], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Harwich–Hook of Holland' },
+            { id: 'hookofholland', name: 'Hook of Holland', country: 'Netherlands', code: 'NL', lat: 51.977, lon: 4.126, population: 10000, e: [], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Hook of Holland–Harwich' },
+            { id: 'hull', name: 'Hull', country: 'United Kingdom', code: 'GB', lat: 53.745, lon: -0.336, population: 560000, e: [], au: ['A63', 'M62'], m: [], j: 2, ferry: true, ferryLabel: 'Hull–Rotterdam' },
+            { id: 'ijmuiden', name: 'IJmuiden', country: 'Netherlands', code: 'NL', lat: 52.46, lon: 4.56, population: 30000, e: [], au: [], m: [], j: 1, ferry: true, ferryLabel: 'IJmuiden–Newcastle' },
+            { id: 'kiel', name: 'Kiel', country: 'Germany', code: 'DE', lat: 54.323, lon: 10.139, population: 250000, e: [], au: [], m: ['A215'], j: 2, ferry: true, ferryLabel: 'Kiel–Oslo / Gothenburg' },
+            { id: 'travemunde', name: 'Travemünde', country: 'Germany', code: 'DE', lat: 53.96, lon: 10.88, population: 16000, e: [], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Travemünde–Malmö' },
+            { id: 'nynashamn', name: 'Nynäshamn', country: 'Sweden', code: 'SE', lat: 58.903, lon: 17.948, population: 15000, e: [], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Nynäshamn–Gdańsk' },
+            { id: 'helsingor', name: 'Helsingør', country: 'Denmark', code: 'DK', lat: 56.036, lon: 12.613, population: 63000, e: ['E47 north', 'E47 south'], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Helsingør–Helsingborg' },
+            { id: 'roscoff', name: 'Roscoff', country: 'France', code: 'FR', lat: 48.723, lon: -3.985, population: 4000, e: [], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Roscoff–Cork' },
+            { id: 'civitavecchia', name: 'Civitavecchia', country: 'Italy', code: 'IT', lat: 42.093, lon: 11.795, population: 53000, e: [], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Civitavecchia–Barcelona' },
+            { id: 'bandirma', name: 'Bandırma', country: 'Türkiye', code: 'TR', lat: 40.35, lon: 27.97, population: 160000, e: [], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Bandırma–Istanbul' },
+            { id: 'luxembourg', name: 'Luxembourg City', country: 'Luxembourg', code: 'LU', lat: 49.612, lon: 6.132, population: 1250000, e: ['E25 north', 'E25 south', 'E44 east', 'E44 west', 'E29 north'], au: ['A1', 'A3', 'A6'], m: [], j: 4, ferry: false },
+            { id: 'frankfurt', name: 'Frankfurt', country: 'Germany', code: 'DE', lat: 50.11, lon: 8.682, population: 2800000, e: ['E42 east', 'E42 west', 'E44 east', 'E44 west', 'E451 north', 'E451 south'], au: [], m: ['A3', 'A5', 'A66'], j: 7, ferry: false },
+            { id: 'cologne', name: 'Cologne', country: 'Germany', code: 'DE', lat: 50.938, lon: 6.96, population: 1100000, e: ['E31 north', 'E31 south', 'E35 east', 'E35 west', 'E40 east', 'E40 west'], au: [], m: ['A1', 'A3', 'A4'], j: 6, ferry: false },
+            { id: 'hamburg', name: 'Hamburg', country: 'Germany', code: 'DE', lat: 53.551, lon: 9.993, population: 1900000, e: ['E22 east', 'E22 west', 'E26 east', 'E26 west', 'E45 north', 'E45 south'], au: [], m: ['A1', 'A7', 'A24'], j: 6, ferry: false },
+            { id: 'hannover', name: 'Hannover', country: 'Germany', code: 'DE', lat: 52.375, lon: 9.732, population: 1200000, e: ['E45 north', 'E45 south'], au: [], m: ['A2', 'A7', 'A37'], j: 5, ferry: false },
+            { id: 'kassel', name: 'Kassel', country: 'Germany', code: 'DE', lat: 51.312, lon: 9.48, population: 330000, e: ['E45 north', 'E45 south'], au: [], m: ['A7', 'A44', 'A49'], j: 4, ferry: false },
+            { id: 'schwerin', name: 'Schwerin', country: 'Germany', code: 'DE', lat: 53.635, lon: 11.401, population: 100000, e: ['E26 east', 'E26 west'], au: [], m: ['A24'], j: 2, ferry: false },
+            { id: 'berlin', name: 'Berlin', country: 'Germany', code: 'DE', lat: 52.52, lon: 13.405, population: 4600000, e: ['E26 west', 'E26 east', 'E30 west', 'E30 east', 'E51 south', 'E55 north'], au: [], m: ['A2', 'A9', 'A10', 'A11', 'A12'], j: 6, ferry: false },
+            { id: 'munich', name: 'Munich', country: 'Germany', code: 'DE', lat: 48.137, lon: 11.576, population: 2900000, e: ['E52 west', 'E52 east', 'E54 south', 'E54 north'], au: [], m: ['A8', 'A9', 'A99'], j: 5, ferry: false },
+            { id: 'copenhagen', name: 'Copenhagen', country: 'Denmark', code: 'DK', lat: 55.676, lon: 12.568, population: 1400000, e: ['E20 west', 'E20 east', 'E47 south', 'E55 south'], au: ['E20 motorway'], m: [], j: 3, ferry: true, ferryLabel: 'Copenhagen–Oslo' },
+            { id: 'malmo', name: 'Malmö', country: 'Sweden', code: 'SE', lat: 55.605, lon: 13.003, population: 750000, e: ['E20 west', 'E20 east', 'E6 north', 'E6 south', 'E22 east'], au: ['E6 motorway'], m: [], j: 4, ferry: true, ferryLabel: 'Malmö–Travemünde' },
+            { id: 'gothenburg', name: 'Gothenburg', country: 'Sweden', code: 'SE', lat: 57.708, lon: 11.974, population: 1050000, e: ['E6 north', 'E6 south', 'E20 east', 'E20 west', 'E45 north', 'E45 south'], au: ['E6 motorway', 'E20 motorway'], m: [], j: 4, ferry: true, ferryLabel: 'Gothenburg–Kiel' },
+            { id: 'oslo', name: 'Oslo', country: 'Norway', code: 'NO', lat: 59.914, lon: 10.752, population: 1500000, e: ['E6 north', 'E6 south', 'E18 west', 'E18 east'], au: [], m: [], j: 4, ferry: true, ferryLabel: 'Oslo–Kiel' },
+            { id: 'vinterbro', name: 'Vinterbro', country: 'Norway', code: 'NO', lat: 59.741, lon: 10.789, population: 18000, e: ['E6 north', 'E6 south', 'E18 east', 'E18 west'], au: [], m: [], j: 3, ferry: false },
+            { id: 'kongsvinger', name: 'Kongsvinger', country: 'Norway', code: 'NO', lat: 60.191, lon: 12.001, population: 18000, e: ['E16 east', 'E16 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'honefoss', name: 'Hønefoss', country: 'Norway', code: 'NO', lat: 60.168, lon: 10.256, population: 30000, e: ['E16 east', 'E16 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'fagernes', name: 'Fagernes', country: 'Norway', code: 'NO', lat: 60.985, lon: 9.237, population: 2000, e: ['E16 east', 'E16 west'], au: [], m: [], j: 1, ferry: false },
+            { id: 'laerdal', name: 'Lærdal', country: 'Norway', code: 'NO', lat: 61.1, lon: 7.482, population: 2200, e: ['E16 east', 'E16 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'voss', name: 'Voss', country: 'Norway', code: 'NO', lat: 60.629, lon: 6.411, population: 15000, e: ['E16 east', 'E16 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'kongsberg', name: 'Kongsberg', country: 'Norway', code: 'NO', lat: 59.668, lon: 9.65, population: 29000, e: ['E134 east', 'E134 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'notodden', name: 'Notodden', country: 'Norway', code: 'NO', lat: 59.559, lon: 9.258, population: 13000, e: ['E134 east', 'E134 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'seljord', name: 'Seljord', country: 'Norway', code: 'NO', lat: 59.489, lon: 8.638, population: 3000, e: ['E134 east', 'E134 west'], au: [], m: [], j: 1, ferry: false },
+            { id: 'drammen', name: 'Drammen', country: 'Norway', code: 'NO', lat: 59.744, lon: 10.204, population: 125000, e: ['E18 north', 'E18 south', 'E134 west', 'E134 east'], au: [], m: [], j: 3, ferry: false },
+            { id: 'porsgrunn', name: 'Porsgrunn', country: 'Norway', code: 'NO', lat: 59.141, lon: 9.656, population: 55000, e: ['E18 east', 'E18 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'arendal', name: 'Arendal', country: 'Norway', code: 'NO', lat: 58.461, lon: 8.773, population: 45000, e: ['E18 east', 'E18 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'kristiansand', name: 'Kristiansand', country: 'Norway', code: 'NO', lat: 58.147, lon: 7.996, population: 120000, e: ['E39 west', 'E39 south', 'E18 east'], au: [], m: [], j: 3, ferry: true, ferryLabel: 'Kristiansand–Hirtshals' },
+            { id: 'mandal', name: 'Mandal', country: 'Norway', code: 'NO', lat: 58.028, lon: 7.453, population: 16000, e: ['E39 west', 'E39 east'], au: [], m: [], j: 2, ferry: false },
+            { id: 'egersund', name: 'Egersund', country: 'Norway', code: 'NO', lat: 58.452, lon: 6.001, population: 15000, e: ['E39 north', 'E39 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'sandnes', name: 'Sandnes', country: 'Norway', code: 'NO', lat: 58.852, lon: 5.736, population: 85000, e: ['E39 north', 'E39 south'], au: [], m: [], j: 3, ferry: false },
+            { id: 'bergen', name: 'Bergen', country: 'Norway', code: 'NO', lat: 60.392, lon: 5.323, population: 430000, e: ['E39 north', 'E39 south', 'E16 east'], eTermini: ['E16'], au: [], m: [], j: 2, ferry: true, ferryLabel: 'Bergen–Hirtshals' },
+            { id: 'haugesund', name: 'Haugesund', country: 'Norway', code: 'NO', lat: 59.414, lon: 5.268, population: 70000, e: ['E39 north', 'E39 south', 'E134 east'], au: [], m: [], j: 2, ferry: false },
+            { id: 'stavanger', name: 'Stavanger', country: 'Norway', code: 'NO', lat: 58.97, lon: 5.733, population: 240000, e: ['E39 north', 'E39 south'], au: [], m: [], j: 3, ferry: true, ferryLabel: 'Stavanger–Hirtshals' },
+            { id: 'forde', name: 'Førde', country: 'Norway', code: 'NO', lat: 61.451, lon: 5.857, population: 13000, e: ['E39 north', 'E39 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'alesund', name: 'Ålesund', country: 'Norway', code: 'NO', lat: 62.472, lon: 6.154, population: 70000, e: ['E39 north', 'E39 south', 'E136 east'], au: [], m: [], j: 2, ferry: false },
+            { id: 'trondheim', name: 'Trondheim', country: 'Norway', code: 'NO', lat: 63.43, lon: 10.395, population: 285000, e: ['E6 north', 'E6 south', 'E39 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'lillehammer', name: 'Lillehammer', country: 'Norway', code: 'NO', lat: 61.115, lon: 10.467, population: 29000, e: ['E6 north', 'E6 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'dombas', name: 'Dombås', country: 'Norway', code: 'NO', lat: 62.075, lon: 9.127, population: 1200, e: ['E6 north', 'E6 south', 'E136 west', 'E136 east'], au: [], m: [], j: 2, ferry: false },
+            { id: 'molde', name: 'Molde', country: 'Norway', code: 'NO', lat: 62.738, lon: 7.16, population: 32000, e: ['E39 north', 'E39 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'moirana', name: 'Mo i Rana', country: 'Norway', code: 'NO', lat: 66.312, lon: 14.142, population: 26000, e: ['E6 north', 'E6 south', 'E12 east'], au: [], m: [], j: 2, ferry: false },
+            { id: 'fauske', name: 'Fauske', country: 'Norway', code: 'NO', lat: 67.259, lon: 15.394, population: 10000, e: ['E6 north', 'E6 south', 'E80 west', 'E80 east'], au: [], m: [], j: 2, ferry: false },
+            { id: 'tromso', name: 'Tromsø', country: 'Norway', code: 'NO', lat: 69.649, lon: 18.956, population: 78000, e: ['E6 south', 'E6 north', 'E8 south'], au: [], m: [], j: 3, ferry: false },
+            { id: 'alta', name: 'Alta', country: 'Norway', code: 'NO', lat: 69.968, lon: 23.272, population: 21000, e: ['E6 north', 'E6 south', 'E45 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'stockholm', name: 'Stockholm', country: 'Sweden', code: 'SE', lat: 59.329, lon: 18.069, population: 2400000, e: ['E4 north', 'E4 south', 'E18 west', 'E20 west'], au: ['E4 motorway', 'E18 motorway'], m: [], j: 4, ferry: true, ferryLabel: 'Stockholm–Helsinki' },
+            { id: 'uppsala', name: 'Uppsala', country: 'Sweden', code: 'SE', lat: 59.859, lon: 17.639, population: 250000, e: ['E4 north', 'E4 south', 'E18 west'], au: ['E4 motorway'], m: [], j: 3, ferry: false },
+            { id: 'gavle', name: 'Gävle', country: 'Sweden', code: 'SE', lat: 60.675, lon: 17.142, population: 110000, e: ['E4 north', 'E4 south', 'E16 west'], au: ['E4 motorway'], m: [], j: 3, ferry: false },
+            { id: 'hudiksvall', name: 'Hudiksvall', country: 'Sweden', code: 'SE', lat: 61.728, lon: 17.105, population: 16000, e: ['E4 north', 'E4 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'ornskoldsvik', name: 'Örnsköldsvik', country: 'Sweden', code: 'SE', lat: 63.29, lon: 18.716, population: 33000, e: ['E4 north', 'E4 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'pitea', name: 'Piteå', country: 'Sweden', code: 'SE', lat: 65.318, lon: 21.479, population: 23000, e: ['E4 north', 'E4 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'linkoping', name: 'Linköping', country: 'Sweden', code: 'SE', lat: 58.411, lon: 15.621, population: 165000, e: ['E4 north', 'E4 south'], au: ['E4 motorway'], m: [], j: 2, ferry: false },
+            { id: 'norrkoping', name: 'Norrköping', country: 'Sweden', code: 'SE', lat: 58.588, lon: 16.19, population: 145000, e: ['E4 north', 'E4 south', 'E22 east', 'E22 west'], au: ['E4 motorway'], m: [], j: 4, ferry: false },
+            { id: 'lund', name: 'Lund', country: 'Sweden', code: 'SE', lat: 55.705, lon: 13.193, population: 130000, e: ['E22 east', 'E22 west'], au: ['E22 motorway'], m: [], j: 2, ferry: false },
+            { id: 'kristianstad', name: 'Kristianstad', country: 'Sweden', code: 'SE', lat: 56.03, lon: 14.156, population: 90000, e: ['E22 east', 'E22 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'karlshamn', name: 'Karlshamn', country: 'Sweden', code: 'SE', lat: 56.17, lon: 14.862, population: 20000, e: ['E22 east', 'E22 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'karlskrona', name: 'Karlskrona', country: 'Sweden', code: 'SE', lat: 56.161, lon: 15.586, population: 66000, e: ['E22 east', 'E22 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'kalmar', name: 'Kalmar', country: 'Sweden', code: 'SE', lat: 56.663, lon: 16.356, population: 72000, e: ['E22 east', 'E22 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'vastervik', name: 'Västervik', country: 'Sweden', code: 'SE', lat: 57.758, lon: 16.637, population: 37000, e: ['E22 east', 'E22 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'trelleborg', name: 'Trelleborg', country: 'Sweden', code: 'SE', lat: 55.375, lon: 13.157, population: 30000, e: ['E6 north', 'E6 south', 'E22 east'], au: [], m: [], j: 2, ferry: true, ferryLabel: 'Trelleborg–Rostock' },
+            { id: 'eskilstuna', name: 'Eskilstuna', country: 'Sweden', code: 'SE', lat: 59.371, lon: 16.509, population: 110000, e: ['E20 east', 'E20 west'], au: ['E20 motorway'], m: [], j: 2, ferry: false },
+            { id: 'karlstad', name: 'Karlstad', country: 'Sweden', code: 'SE', lat: 59.379, lon: 13.504, population: 95000, e: ['E18 east', 'E18 west', 'E45 north', 'E45 south'], au: ['E18 motorway'], m: [], j: 3, ferry: false },
+            { id: 'mora', name: 'Mora', country: 'Sweden', code: 'SE', lat: 61.005, lon: 14.537, population: 20000, e: ['E45 north', 'E45 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'gallivare', name: 'Gällivare', country: 'Sweden', code: 'SE', lat: 67.133, lon: 20.654, population: 18000, e: ['E10 west', 'E10 east', 'E45 north', 'E45 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'falun', name: 'Falun', country: 'Sweden', code: 'SE', lat: 60.604, lon: 15.626, population: 60000, e: ['E16 east', 'E16 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'borlange', name: 'Borlänge', country: 'Sweden', code: 'SE', lat: 60.485, lon: 15.437, population: 52000, e: ['E16 east', 'E16 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'vasteras', name: 'Västerås', country: 'Sweden', code: 'SE', lat: 59.611, lon: 16.545, population: 155000, e: ['E18 east', 'E18 west'], au: ['E18 motorway'], m: [], j: 2, ferry: false },
+            { id: 'orebro', name: 'Örebro', country: 'Sweden', code: 'SE', lat: 59.275, lon: 15.213, population: 160000, e: ['E18 east', 'E18 west', 'E20 north', 'E20 south'], au: ['E18 motorway', 'E20 motorway'], m: [], j: 3, ferry: false },
+            { id: 'jonkoping', name: 'Jönköping', country: 'Sweden', code: 'SE', lat: 57.782, lon: 14.161, population: 150000, e: ['E4 north', 'E4 south', 'E40 east', 'E40 west'], au: ['E4 motorway', 'E40 motorway'], m: [], j: 3, ferry: false },
+            { id: 'ostersund', name: 'Östersund', country: 'Sweden', code: 'SE', lat: 63.179, lon: 14.636, population: 65000, e: ['E14 east', 'E14 west', 'E45 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'sundsvall', name: 'Sundsvall', country: 'Sweden', code: 'SE', lat: 62.39, lon: 17.306, population: 100000, e: ['E4 north', 'E4 south', 'E14 west'], au: ['E4 motorway'], m: [], j: 2, ferry: false },
+            { id: 'umea', name: 'Umeå', country: 'Sweden', code: 'SE', lat: 63.825, lon: 20.263, population: 130000, e: ['E4 north', 'E4 south', 'E12 west'], au: ['E4 motorway'], m: [], j: 2, ferry: false },
+            { id: 'lulea', name: 'Luleå', country: 'Sweden', code: 'SE', lat: 65.584, lon: 22.154, population: 80000, e: ['E4 north', 'E4 south', 'E10 west'], au: ['E4 motorway'], m: [], j: 2, ferry: false },
+            { id: 'helsinki', name: 'Helsinki', country: 'Finland', code: 'FI', lat: 60.17, lon: 24.938, population: 1500000, e: ['E12 west', 'E18 west', 'E75 north'], au: [], m: [], j: 3, ferry: true, ferryLabel: 'Helsinki–Tallinn' },
+            { id: 'tallinn', name: 'Tallinn', country: 'Estonia', code: 'EE', lat: 59.437, lon: 24.753, population: 600000, e: ['E20 west', 'E67 south', 'E263 south'], au: [], m: [], j: 2, ferry: true, ferryLabel: 'Tallinn–Helsinki' },
+            { id: 'riga', name: 'Riga', country: 'Latvia', code: 'LV', lat: 56.949, lon: 24.105, population: 900000, e: ['E22 west', 'E22 east', 'E67 south', 'E77 south'], au: [], m: [], j: 3, ferry: true, ferryLabel: 'Riga–Stockholm' },
+            { id: 'warsaw', name: 'Warsaw', country: 'Poland', code: 'PL', lat: 52.229, lon: 21.012, population: 3100000, e: ['E30 west', 'E30 east', 'E67 north', 'E77 south', 'E372 east'], au: ['A2', 'S7', 'S8'], m: [], j: 5, ferry: false },
+            { id: 'prague', name: 'Prague', country: 'Czechia', code: 'CZ', lat: 50.075, lon: 14.438, population: 1400000, e: ['E48 west', 'E48 east', 'E50 west', 'E50 east', 'E55 north', 'E65 south'], au: ['D1', 'D5', 'D8'], m: [], j: 5, ferry: false },
+            { id: 'vienna', name: 'Vienna', country: 'Austria', code: 'AT', lat: 48.208, lon: 16.373, population: 2900000, e: ['E49 north', 'E49 south', 'E58 east', 'E58 west', 'E59 north', 'E60 west', 'E461 north'], au: ['A1', 'A2', 'A4'], m: [], j: 5, ferry: false },
+            { id: 'zurich', name: 'Zurich', country: 'Switzerland', code: 'CH', lat: 47.376, lon: 8.541, population: 1400000, e: ['E41 north', 'E41 south', 'E60 east', 'E60 west'], au: ['A1', 'A3', 'A4'], m: [], j: 4, ferry: false },
+            { id: 'milan', name: 'Milan', country: 'Italy', code: 'IT', lat: 45.465, lon: 9.19, population: 4400000, e: ['E35 north', 'E35 south', 'E64 west', 'E64 east', 'E70 east'], au: ['A1', 'A4', 'A7', 'A8'], m: [], j: 5, ferry: false },
+            { id: 'lyon', name: 'Lyon', country: 'France', code: 'FR', lat: 45.764, lon: 4.835, population: 1700000, e: ['E15 north', 'E15 south', 'E70 west', 'E70 east', 'E711 north'], au: ['A6', 'A7', 'A42'], m: [], j: 5, ferry: false },
+            { id: 'barcelona', name: 'Barcelona', country: 'Spain', code: 'ES', lat: 41.388, lon: 2.17, population: 5600000, e: ['E15 north', 'E15 south', 'E90 west', 'E90 east', 'E9 north'], au: ['AP-7', 'A-2', 'C-32'], m: [], j: 4, ferry: true, ferryLabel: 'Barcelona–Civitavecchia' },
+            { id: 'madrid', name: 'Madrid', country: 'Spain', code: 'ES', lat: 40.417, lon: -3.704, population: 6700000, e: ['E5 north', 'E5 south', 'E90 east', 'E90 west'], au: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6'], m: [], j: 6, ferry: false },
+            { id: 'lisbon', name: 'Lisbon', country: 'Portugal', code: 'PT', lat: 38.722, lon: -9.139, population: 2900000, e: ['E1 north', 'E1 south', 'E80 east', 'E90 east'], au: ['A1', 'A2', 'A5'], m: [], j: 3, ferry: false },
+            { id: 'rome', name: 'Rome', country: 'Italy', code: 'IT', lat: 41.903, lon: 12.496, population: 4300000, e: ['E35 north', 'E35 south', 'E45 north', 'E80 west'], au: ['A1', 'A24'], m: [], j: 4, ferry: false },
+            { id: 'zagreb', name: 'Zagreb', country: 'Croatia', code: 'HR', lat: 45.815, lon: 15.982, population: 1100000, e: ['E59 north', 'E59 south', 'E65 south', 'E70 east', 'E71 north'], au: ['A1', 'A2', 'A3'], m: [], j: 4, ferry: false },
+            { id: 'budapest', name: 'Budapest', country: 'Hungary', code: 'HU', lat: 47.498, lon: 19.04, population: 3000000, e: ['E60 west', 'E60 east', 'E71 south', 'E73 south', 'E75 north'], au: ['M1', 'M3', 'M5', 'M7'], m: [], j: 5, ferry: false },
+            { id: 'bucharest', name: 'Bucharest', country: 'Romania', code: 'RO', lat: 44.426, lon: 26.103, population: 2300000, e: ['E60 west', 'E60 east', 'E70 west', 'E85 north', 'E85 south'], au: ['A1', 'A2', 'A3'], m: [], j: 4, ferry: false },
+            { id: 'istanbul', name: 'Istanbul', country: 'Türkiye', code: 'TR', lat: 41.008, lon: 28.978, population: 15800000, e: ['E80 west', 'E80 east', 'E84 west', 'E90 west'], au: ['O-1', 'O-2', 'O-3', 'O-4'], m: [], j: 6, ferry: true, ferryLabel: 'Istanbul–Bandirma' },
+            { id: 'belgrade', name: 'Belgrade', country: 'Serbia', code: 'RS', lat: 44.787, lon: 20.449, population: 1400000, e: ['E70 west', 'E70 east', 'E75 north', 'E75 south', 'E763 south'], au: ['A1', 'A3'], m: [], j: 4, ferry: false },
+            { id: 'cork', name: 'Cork', country: 'Ireland', code: 'IE', lat: 51.898, lon: -8.475, population: 310000, e: ['E20 east', 'E30 east', 'E30 west'], au: ['M8', 'N25'], m: [], j: 2, ferry: true, ferryLabel: 'Cork–Roscoff' },
+            { id: 'edinburgh', name: 'Edinburgh', country: 'United Kingdom', code: 'GB', lat: 55.953, lon: -3.188, population: 900000, e: ['E15 north', 'E15 south', 'E18 west'], au: ['M8', 'M9'], m: [], j: 3, ferry: false },
+            { id: 'newcastle', name: 'Newcastle', country: 'United Kingdom', code: 'GB', lat: 54.978, lon: -1.617, population: 800000, e: ['E15 north', 'E15 south'], au: ['A1(M)', 'A19'], m: [], j: 2, ferry: true, ferryLabel: 'Newcastle–IJmuiden' },
+            { id: 'bordeaux', name: 'Bordeaux', country: 'France', code: 'FR', lat: 44.838, lon: -0.579, population: 1300000, e: ['E5 north', 'E5 south', 'E70 west', 'E70 east'], au: ['A10', 'A62', 'A63'], m: [], j: 4, ferry: false },
+            { id: 'gothard', name: 'Gotthard / Airolo', country: 'Switzerland', code: 'CH', lat: 46.53, lon: 8.61, population: 12000, e: ['E35 north', 'E35 south', 'E41 north', 'E41 south'], au: ['A2'], m: [], j: 3, ferry: false },
+            { id: 'helsingborg', name: 'Helsingborg', country: 'Sweden', code: 'SE', lat: 56.046, lon: 12.694, population: 150000, e: ['E4 north', 'E4 south', 'E6 north', 'E6 south'], au: ['E4 motorway', 'E6 motorway'], m: [], j: 2, ferry: true, ferryLabel: 'Helsingborg–Helsingør' },
+            { id: 'salzburg', name: 'Salzburg', country: 'Austria', code: 'AT', lat: 47.809, lon: 13.055, population: 600000, e: ['E52 west', 'E52 east', 'E55 north', 'E60 west'], au: ['A1', 'A10'], m: [], j: 3, ferry: false },
+            { id: 'gdansk', name: 'Gdańsk', country: 'Poland', code: 'PL', lat: 54.352, lon: 18.646, population: 750000, e: ['E28 west', 'E28 east', 'E75 south'], au: ['A1', 'S6'], m: [], j: 3, ferry: true, ferryLabel: 'Gdańsk–Nynäshamn' },
+            { id: 'aalborg', name: 'Aalborg', country: 'Denmark', code: 'DK', lat: 57.048, lon: 9.922, population: 220000, e: ['E45 north', 'E45 south', 'E39 north'], au: ['E45 motorway'], m: [], j: 3, ferry: false },
+            { id: 'aarhus', name: 'Aarhus', country: 'Denmark', code: 'DK', lat: 56.162, lon: 10.204, population: 350000, e: ['E45 north', 'E45 south'], au: ['E45 motorway'], m: [], j: 2, ferry: false },
+            { id: 'horsens', name: 'Horsens', country: 'Denmark', code: 'DK', lat: 55.86, lon: 9.85, population: 99000, e: ['E45 north', 'E45 south'], au: ['E45 motorway'], m: [], j: 2, ferry: false },
+            { id: 'herning', name: 'Herning', country: 'Denmark', code: 'DK', lat: 56.139, lon: 8.973, population: 51000, e: [], au: ['Route 18 motorway'], m: [], j: 3, ferry: false },
+            { id: 'viborg', name: 'Viborg', country: 'Denmark', code: 'DK', lat: 56.453, lon: 9.402, population: 98000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'billund', name: 'Billund', country: 'Denmark', code: 'DK', lat: 55.731, lon: 9.107, population: 7000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'silkeborg', name: 'Silkeborg', country: 'Denmark', code: 'DK', lat: 56.169, lon: 9.545, population: 100000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'odense', name: 'Odense', country: 'Denmark', code: 'DK', lat: 55.403, lon: 10.402, population: 210000, e: ['E20 east', 'E20 west'], au: ['E20 motorway'], m: [], j: 3, ferry: false },
+            { id: 'kolding', name: 'Kolding', country: 'Denmark', code: 'DK', lat: 55.49, lon: 9.472, population: 95000, e: ['E45 north', 'E45 south', 'E20 east', 'E20 west'], au: ['E45 motorway', 'E20 motorway'], m: [], j: 3, ferry: false },
+            { id: 'frederikshavn', name: 'Frederikshavn', country: 'Denmark', code: 'DK', lat: 57.441, lon: 10.537, population: 23000, e: ['E45 north', 'E45 south'], au: [], m: [], j: 2, ferry: true, ferryLabel: 'Frederikshavn–Gothenburg' },
+            { id: 'flensburg', name: 'Flensburg', country: 'Germany', code: 'DE', lat: 54.793, lon: 9.446, population: 90000, e: ['E45 north', 'E45 south'], au: [], m: ['A7'], j: 2, ferry: false },
+            { id: 'hirtshals', name: 'Hirtshals', country: 'Denmark', code: 'DK', lat: 57.588, lon: 9.97, population: 6000, e: ['E39 south', 'E39 ferry north'], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Hirtshals–Kristiansand / Stavanger / Larvik' },
+            { id: 'larvik', name: 'Larvik', country: 'Norway', code: 'NO', lat: 59.054, lon: 10.027, population: 50000, e: ['E18 east', 'E18 west'], au: [], m: [], j: 2, ferry: true, ferryLabel: 'Larvik–Hirtshals' },
+            { id: 'narvik', name: 'Narvik', country: 'Norway', code: 'NO', lat: 68.438, lon: 17.427, population: 22000, e: ['E6 north', 'E6 south', 'E10 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'evje', name: 'Evje', country: 'Norway', code: 'NO', lat: 58.585, lon: 7.803, population: 3700, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'valle', name: 'Valle', country: 'Norway', code: 'NO', lat: 59.212, lon: 7.535, population: 1200, e: [], au: [], m: [], j: 1, ferry: false },
+            { id: 'hovden', name: 'Hovden', country: 'Norway', code: 'NO', lat: 59.56, lon: 7.36, population: 500, e: [], au: [], m: [], j: 1, ferry: false },
+            { id: 'haukeli', name: 'Haukeli', country: 'Norway', code: 'NO', lat: 59.735956, lon: 7.557816, locationNote: 'Approximate mapped settlement point; junction geometry is generalized.', population: 300, e: ['E134 east', 'E134 west'], au: [], m: [], j: 3, ferry: false },
+            { id: 'roldal', name: 'Røldal', country: 'Norway', code: 'NO', lat: 59.83, lon: 6.82, population: 400, e: ['E134 east', 'E134 west'], au: [], m: [], j: 2, ferry: false },
+            { id: 'odda', name: 'Odda', country: 'Norway', code: 'NO', lat: 60.069, lon: 6.546, population: 11000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'sauda', name: 'Sauda', country: 'Norway', code: 'NO', lat: 59.65, lon: 6.354, population: 4600, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'sand', name: 'Sand', country: 'Norway', code: 'NO', lat: 59.486, lon: 6.25, population: 1200, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'hjelmeland', name: 'Hjelmeland', country: 'Norway', code: 'NO', lat: 59.233, lon: 6.18, population: 1100, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'lauvvik', name: 'Lauvvik', country: 'Norway', code: 'NO', lat: 58.88, lon: 5.99, population: 500, e: [], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Lauvvik–Oanes car ferry' },
+            { id: 'oanes', name: 'Oanes', country: 'Norway', code: 'NO', lat: 58.9, lon: 6.07, population: 300, e: [], au: [], m: [], j: 1, ferry: true, ferryLabel: 'Oanes–Lauvvik car ferry' },
+            { id: 'gol', name: 'Gol', country: 'Norway', code: 'NO', lat: 60.701, lon: 8.945, population: 5000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'geilo', name: 'Geilo', country: 'Norway', code: 'NO', lat: 60.534, lon: 8.207, population: 2500, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'eidfjord', name: 'Eidfjord', country: 'Norway', code: 'NO', lat: 60.467, lon: 7.07, population: 950, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'vik', name: 'Vik', country: 'Norway', code: 'NO', lat: 61.087, lon: 6.58, population: 2700, e: [], au: [], m: [], j: 1, ferry: false },
+            { id: 'sogndal', name: 'Sogndal', country: 'Norway', code: 'NO', lat: 61.23, lon: 7.1, population: 8500, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'hamar', name: 'Hamar', country: 'Norway', code: 'NO', lat: 60.794, lon: 11.068, population: 33000, e: ['E6 north', 'E6 south'], au: [], m: [], j: 3, ferry: false },
+            { id: 'elverum', name: 'Elverum', country: 'Norway', code: 'NO', lat: 60.881, lon: 11.563, population: 21000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'rena', name: 'Rena', country: 'Norway', code: 'NO', lat: 61.132, lon: 11.371, population: 2200, e: [], au: [], m: [], j: 1, ferry: false },
+            { id: 'koppang', name: 'Koppang', country: 'Norway', code: 'NO', lat: 61.57, lon: 11.05, population: 1500, e: [], au: [], m: [], j: 1, ferry: false },
+            { id: 'tynset', name: 'Tynset', country: 'Norway', code: 'NO', lat: 62.275, lon: 10.782, population: 5600, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'ulsberg', name: 'Ulsberg', country: 'Norway', code: 'NO', lat: 62.65, lon: 9.71, population: 300, e: ['E6 north', 'E6 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'boras', name: 'Borås', country: 'Sweden', code: 'SE', lat: 57.72, lon: 12.94, population: 115000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'ulricehamn', name: 'Ulricehamn', country: 'Sweden', code: 'SE', lat: 57.79, lon: 13.414, population: 25000, e: [], au: [], m: [], j: 1, ferry: false },
+            { id: 'nassjo', name: 'Nässjö', country: 'Sweden', code: 'SE', lat: 57.65, lon: 14.696, population: 31000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'vimmerby', name: 'Vimmerby', country: 'Sweden', code: 'SE', lat: 57.665, lon: 15.856, population: 11000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'hassleholm', name: 'Hässleholm', country: 'Sweden', code: 'SE', lat: 56.158, lon: 13.766, population: 52000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'vaxjo', name: 'Växjö', country: 'Sweden', code: 'SE', lat: 56.877, lon: 14.809, population: 95000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'almhult', name: 'Älmhult', country: 'Sweden', code: 'SE', lat: 56.551, lon: 14.138, population: 18000, e: [], au: [], m: [], j: 1, ferry: false },
+            { id: 'hultsfred', name: 'Hultsfred', country: 'Sweden', code: 'SE', lat: 57.488, lon: 15.843, population: 5500, e: [], au: [], m: [], j: 1, ferry: false },
+            { id: 'motala', name: 'Motala', country: 'Sweden', code: 'SE', lat: 58.537, lon: 15.036, population: 43000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'odeshog', name: 'Ödeshög', country: 'Sweden', code: 'SE', lat: 58.23, lon: 14.65, population: 2600, e: ['E4 north', 'E4 south'], au: ['E4 motorway'], m: [], j: 2, ferry: false },
+            { id: 'ludvika', name: 'Ludvika', country: 'Sweden', code: 'SE', lat: 60.149, lon: 15.187, population: 27000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'bollnas', name: 'Bollnäs', country: 'Sweden', code: 'SE', lat: 61.348, lon: 16.394, population: 27000, e: [], au: [], m: [], j: 2, ferry: false },
+            { id: 'soderhamn', name: 'Söderhamn', country: 'Sweden', code: 'SE', lat: 61.303, lon: 17.059, population: 12000, e: ['E4 north', 'E4 south'], au: ['E4 motorway'], m: [], j: 2, ferry: false },
+            { id: 'kautokeino', name: 'Kautokeino', country: 'Norway', code: 'NO', lat: 69.012, lon: 23.041, population: 1500, e: ['E45 south'], au: [], m: [], j: 1, ferry: false },
+            { id: 'karesuando', name: 'Karesuando', country: 'Sweden', code: 'SE', lat: 68.44, lon: 22.48, population: 300, e: ['E45 north', 'E45 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'kiruna', name: 'Kiruna', country: 'Sweden', code: 'SE', lat: 67.855, lon: 20.225, population: 23000, e: ['E10 east', 'E10 west'], au: [], m: [], j: 3, ferry: false },
+            { id: 'jokkmokk', name: 'Jokkmokk', country: 'Sweden', code: 'SE', lat: 66.607, lon: 19.823, population: 2800, e: ['E45 north', 'E45 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'arvidsjaur', name: 'Arvidsjaur', country: 'Sweden', code: 'SE', lat: 65.59, lon: 19.18, population: 6200, e: ['E45 north', 'E45 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'sorsele', name: 'Sorsele', country: 'Sweden', code: 'SE', lat: 65.534, lon: 17.537, population: 1200, e: ['E45 north', 'E45 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'storuman', name: 'Storuman', country: 'Sweden', code: 'SE', lat: 65.095, lon: 17.117, population: 2200, e: ['E12 east', 'E12 west', 'E45 north', 'E45 south'], au: [], m: [], j: 4, ferry: false },
+            { id: 'vilhelmina', name: 'Vilhelmina', country: 'Sweden', code: 'SE', lat: 64.626, lon: 16.656, population: 6500, e: ['E45 north', 'E45 south'], au: [], m: [], j: 2, ferry: false },
+            { id: 'hemavan', name: 'Hemavan', country: 'Sweden', code: 'SE', lat: 65.82, lon: 15.09, population: 250, e: ['E12 east', 'E12 west'], au: [], m: [], j: 1, ferry: false },
+            { id: 'tarnaby', name: 'Tärnaby', country: 'Sweden', code: 'SE', lat: 65.71, lon: 15.26, population: 500, e: ['E12 east', 'E12 west'], au: [], m: [], j: 1, ferry: false },
+            { id: 'lycksele', name: 'Lycksele', country: 'Sweden', code: 'SE', lat: 64.595, lon: 18.673, population: 8500, e: ['E12 east', 'E12 west'], au: [], m: [], j: 2, ferry: false }
+        ];
+
+        // Each link is a generalized connection between two strategic graph nodes.
+        const links = [
+            ['london', 'paris', 'E15 / A1', 'e'], ['london', 'brussels', 'E19 / A2', 'road'], ['harwich', 'hookofholland', 'Harwich–Hook of Holland car ferry', 'ferry'], ['london', 'harwich', 'A12', 'road'], ['hookofholland', 'rotterdam', 'A20', 'road'],
+            ['paris', 'brussels', 'E19 / A1', 'e'], ['brussels', 'amsterdam', 'E19 / A27', 'e'], ['amsterdam', 'rotterdam', 'E19 / A4', 'e'], ['brussels', 'luxembourg', 'E25 / A3', 'e'],
+            ['paris', 'lyon', 'E15 / A6', 'e'], ['lyon', 'milan', 'E35 / A4', 'e'], ['milan', 'zurich', 'E35 / A2', 'e'], ['zurich', 'frankfurt', 'E41 / A5', 'e'],
+            ['frankfurt', 'cologne', 'E35 / A3', 'e'], ['cologne', 'amsterdam', 'E35 / A3', 'e'], ['berlin', 'warsaw', 'E30 / A2', 'e'], ['warsaw', 'riga', 'E67 / Via Baltica', 'e'],
+            ['riga', 'tallinn', 'E67 / Via Baltica', 'e'], ['tallinn', 'helsinki', 'Gulf of Finland ferry', 'ferry'], ['helsinki', 'stockholm', 'Baltic Sea ferry', 'ferry'],
+            ['hamburg', 'flensburg', 'E45 / A7', 'e'], ['flensburg', 'kolding', 'E45', 'e'], ['kolding', 'horsens', 'E45', 'e'], ['horsens', 'aarhus', 'E45', 'e'], ['aarhus', 'aalborg', 'E45', 'e'],
+            ['hamburg', 'hannover', 'E45 / A7', 'e'], ['hannover', 'kassel', 'E45 / A7', 'e'], ['kassel', 'frankfurt', 'E45 / A7', 'e'],
+            ['hamburg', 'schwerin', 'E26 / A24', 'e'], ['schwerin', 'berlin', 'E26 / A24', 'e'],
+            ['kolding', 'odense', 'E20', 'e'], ['odense', 'copenhagen', 'E20', 'e'], ['copenhagen', 'malmo', 'E20 / Øresund', 'e'], ['malmo', 'gothenburg', 'E6', 'e'], ['gothenburg', 'oslo', 'E6', 'e'],
+            ['billund', 'kolding', 'Route 28', 'road'], ['billund', 'herning', 'Route 30', 'road'], ['herning', 'silkeborg', 'Route 15', 'road'], ['silkeborg', 'aarhus', 'Route 15', 'road'], ['silkeborg', 'horsens', 'Route 52', 'road'], ['herning', 'viborg', 'Route 12', 'road'],
+            ['aalborg', 'hirtshals', 'E39', 'e'], ['frederikshavn', 'aalborg', 'E45', 'e'], ['frederikshavn', 'gothenburg', 'Kattegat car ferry', 'ferry'],
+            ['oslo', 'drammen', 'E18', 'e'], ['oslo', 'vinterbro', 'E6', 'e', [59.828, 10.815]], ['oslo', 'vinterbro', 'E18', 'e', [59.828, 10.689]], ['vinterbro', 'karlstad', 'E18', 'e'], ['vinterbro', 'larvik', 'E18', 'e'], ['larvik', 'porsgrunn', 'E18', 'e'], ['porsgrunn', 'arendal', 'E18', 'e'], ['arendal', 'kristiansand', 'E18', 'e'],
+            ['drammen', 'kongsberg', 'E134', 'e'], ['kongsberg', 'notodden', 'E134', 'e'], ['notodden', 'seljord', 'E134', 'e'], ['seljord', 'haugesund', 'E134', 'e'],
+            ['kristiansand', 'evje', 'Rv 9', 'road'], ['evje', 'valle', 'Rv 9', 'road'], ['valle', 'hovden', 'Rv 9', 'road'], ['hovden', 'haukeli', 'Rv 9', 'road'],
+            ['seljord', 'haukeli', 'E134', 'e'], ['haukeli', 'roldal', 'E134', 'e'], ['roldal', 'haugesund', 'E134', 'e'],
+            ['kristiansand', 'mandal', 'E39', 'e'], ['mandal', 'egersund', 'E39', 'e'], ['egersund', 'sandnes', 'E39', 'e'], ['sandnes', 'stavanger', 'E39', 'e'],
+            ['sandnes', 'lauvvik', 'Rv 13', 'road'], ['lauvvik', 'oanes', 'Lauvvik–Oanes car ferry', 'ferry'], ['oanes', 'hjelmeland', 'Rv 13', 'road'], ['hjelmeland', 'sand', 'Rv 13', 'road'], ['sand', 'roldal', 'Rv 13', 'road'], ['sand', 'sauda', 'Rv 520', 'road'], ['sauda', 'roldal', 'Rv 520', 'road'],
+            ['roldal', 'odda', 'Rv 13', 'road'], ['odda', 'eidfjord', 'Rv 13', 'road'], ['eidfjord', 'voss', 'Rv 7 / Rv 13', 'road'], ['voss', 'vik', 'Rv 13', 'road'], ['vik', 'sogndal', 'Rv 13', 'road'],
+            ['stavanger', 'haugesund', 'E39', 'e'], ['haugesund', 'bergen', 'E39', 'e'], ['bergen', 'forde', 'E39', 'e'], ['forde', 'alesund', 'E39', 'e'], ['alesund', 'molde', 'E39', 'road'], ['molde', 'trondheim', 'E39 / E6', 'road'],
+            ['trondheim', 'ostersund', 'E14', 'e'], ['ostersund', 'sundsvall', 'E14', 'e'], ['sundsvall', 'umea', 'E4', 'e'], ['umea', 'lulea', 'E4', 'e'],
+            ['trondheim', 'dombas', 'E6', 'e'], ['dombas', 'lillehammer', 'E6', 'e'], ['lillehammer', 'hamar', 'E6', 'e'], ['hamar', 'oslo', 'E6', 'e'], ['trondheim', 'moirana', 'E6', 'e'], ['moirana', 'fauske', 'E6', 'e'], ['fauske', 'narvik', 'E6', 'e'], ['narvik', 'tromso', 'E6', 'e'], ['tromso', 'alta', 'E6', 'e'],
+            ['moirana', 'hemavan', 'E12', 'e'], ['hemavan', 'tarnaby', 'E12', 'e'], ['tarnaby', 'storuman', 'E12', 'e'], ['storuman', 'lycksele', 'E12', 'e'], ['lycksele', 'umea', 'E12', 'e'],
+            ['hamar', 'elverum', 'Rv 3', 'road'], ['elverum', 'rena', 'Rv 3', 'road'], ['rena', 'koppang', 'Rv 3', 'road'], ['koppang', 'tynset', 'Rv 3', 'road'], ['tynset', 'ulsberg', 'Rv 3', 'road'], ['ulsberg', 'trondheim', 'Rv 3 / E6', 'road'],
+            ['oslo', 'honefoss', 'E16', 'e'], ['honefoss', 'fagernes', 'E16', 'e'], ['fagernes', 'laerdal', 'E16', 'e'], ['laerdal', 'voss', 'E16', 'e'], ['voss', 'bergen', 'E16', 'e'],
+            ['honefoss', 'gol', 'Rv 7', 'road'], ['gol', 'geilo', 'Rv 7', 'road'], ['geilo', 'eidfjord', 'Rv 7', 'road'], ['eidfjord', 'voss', 'Rv 7', 'road'],
+            ['oslo', 'kongsvinger', 'E16', 'e'], ['kongsvinger', 'borlange', 'E16', 'e'], ['borlange', 'falun', 'E16', 'e'], ['falun', 'gavle', 'E16', 'e'],
+            ['alta', 'kautokeino', 'E45', 'e'], ['kautokeino', 'karesuando', 'E45', 'e'], ['karesuando', 'gallivare', 'E45', 'e'], ['gallivare', 'jokkmokk', 'E45', 'e'], ['jokkmokk', 'arvidsjaur', 'E45', 'e'], ['arvidsjaur', 'sorsele', 'E45', 'e'], ['sorsele', 'storuman', 'E45', 'e'], ['storuman', 'vilhelmina', 'E45', 'e'], ['vilhelmina', 'ostersund', 'E45', 'e'], ['ostersund', 'mora', 'E45', 'e'], ['mora', 'karlstad', 'E45', 'e'], ['karlstad', 'gothenburg', 'E45', 'e'],
+            ['karlstad', 'orebro', 'E18', 'e'], ['orebro', 'vasteras', 'E18', 'e'], ['vasteras', 'stockholm', 'E18', 'e'],
+            ['gothenburg', 'orebro', 'E20', 'e'], ['orebro', 'eskilstuna', 'E20', 'e'], ['eskilstuna', 'stockholm', 'E20', 'e'],
+            ['stockholm', 'uppsala', 'E4', 'e'], ['uppsala', 'gavle', 'E4', 'e'], ['gavle', 'soderhamn', 'E4', 'e'], ['soderhamn', 'hudiksvall', 'E4', 'e'], ['hudiksvall', 'sundsvall', 'E4', 'e'], ['sundsvall', 'ornskoldsvik', 'E4', 'e'], ['ornskoldsvik', 'umea', 'E4', 'e'], ['umea', 'pitea', 'E4', 'e'], ['pitea', 'lulea', 'E4', 'e'],
+            ['stockholm', 'norrkoping', 'E4', 'e'], ['norrkoping', 'linkoping', 'E4', 'e'], ['linkoping', 'jonkoping', 'E4', 'e'], ['jonkoping', 'helsingborg', 'E4', 'e'], ['helsingborg', 'malmo', 'E4 / E6', 'e'], ['odeshog', 'jonkoping', 'E4', 'e'],
+            ['hirtshals', 'kristiansand', 'Hirtshals–Kristiansand car ferry', 'ferry'], ['hirtshals', 'stavanger', 'Hirtshals–Stavanger car ferry', 'ferry'], ['hirtshals', 'larvik', 'Hirtshals–Larvik car ferry', 'ferry'], ['hirtshals', 'bergen', 'Hirtshals–Bergen car ferry', 'ferry'],
+            ['berlin', 'prague', 'E55 / D8', 'e'], ['prague', 'vienna', 'E59 / D1', 'e'], ['vienna', 'budapest', 'E60 / M1', 'e'], ['budapest', 'belgrade', 'E75 / A1', 'e'],
+            ['belgrade', 'zagreb', 'E70 / A3', 'e'], ['zagreb', 'milan', 'E70 / A4', 'e'], ['budapest', 'bucharest', 'E60', 'e'], ['bucharest', 'istanbul', 'E80', 'e'],
+            ['paris', 'bordeaux', 'E5 / A10', 'e'], ['bordeaux', 'madrid', 'E5 / A63', 'e'], ['madrid', 'lisbon', 'E90 / A-6', 'e'], ['madrid', 'barcelona', 'E90 / A-2', 'e'],
+            ['barcelona', 'milan', 'E15 / A9', 'e'], ['rome', 'milan', 'E35 / A1', 'e'], ['edinburgh', 'newcastle', 'A1 / E15', 'road'],
+            ['newcastle', 'london', 'A1 / E15', 'road'], ['newcastle', 'ijmuiden', 'Newcastle–IJmuiden car ferry', 'ferry'], ['ijmuiden', 'amsterdam', 'A9', 'road'], ['rotterdam', 'hull', 'Rotterdam–Hull car ferry', 'ferry'],
+            ['hamburg', 'kiel', 'A7', 'road'], ['kiel', 'gothenburg', 'Kiel–Gothenburg car ferry', 'ferry'], ['kiel', 'oslo', 'Kiel–Oslo car ferry', 'ferry'], ['travemunde', 'malmo', 'Travemünde–Malmö car ferry', 'ferry'],
+            ['frankfurt', 'gothard', 'A5 / A2', 'road'], ['gothard', 'milan', 'E35 / A2', 'e'], ['salzburg', 'munich', 'E52 / A8', 'e'], ['munich', 'frankfurt', 'A9 / A3', 'road'],
+            ['gdansk', 'warsaw', 'E75 / A1', 'e'], ['gdansk', 'nynashamn', 'Gdańsk–Nynäshamn car ferry', 'ferry'], ['nynashamn', 'stockholm', 'Road 73', 'road'],
+            ['trelleborg', 'malmo', 'E6 / E22', 'e'], ['malmo', 'lund', 'E22', 'e'], ['lund', 'kristianstad', 'E22', 'e'], ['kristianstad', 'karlshamn', 'E22', 'e'], ['karlshamn', 'karlskrona', 'E22', 'e'], ['karlskrona', 'kalmar', 'E22', 'e'], ['kalmar', 'vastervik', 'E22', 'e'], ['vastervik', 'norrkoping', 'E22', 'e'],
+            ['gothenburg', 'boras', 'Route 40', 'road'], ['boras', 'ulricehamn', 'Route 40', 'road'], ['ulricehamn', 'jonkoping', 'Route 40', 'road'], ['jonkoping', 'nassjo', 'Route 40', 'road'], ['nassjo', 'vimmerby', 'Route 40', 'road'], ['vimmerby', 'vastervik', 'Route 40', 'road'],
+            ['malmo', 'hassleholm', 'Route 23', 'road'], ['hassleholm', 'vaxjo', 'Route 23', 'road'], ['vaxjo', 'almhult', 'Route 23', 'road'], ['almhult', 'hultsfred', 'Route 23', 'road'], ['hultsfred', 'vimmerby', 'Route 23', 'road'], ['vimmerby', 'linkoping', 'Route 23', 'road'],
+            ['odeshog', 'motala', 'Route 50', 'road'], ['motala', 'orebro', 'Route 50', 'road'], ['orebro', 'ludvika', 'Route 50', 'road'], ['ludvika', 'borlange', 'Route 50', 'road'], ['borlange', 'falun', 'Route 50', 'road'], ['falun', 'bollnas', 'Route 50', 'road'], ['bollnas', 'soderhamn', 'Route 50', 'road'],
+            ['helsingborg', 'helsingor', 'Helsingborg–Helsingør car ferry', 'ferry'], ['helsingor', 'copenhagen', 'E47', 'e'], ['copenhagen', 'oslo', 'Copenhagen–Oslo car ferry', 'ferry'],
+            ['cork', 'roscoff', 'Cork–Roscoff car ferry', 'ferry'], ['rome', 'civitavecchia', 'SS1 / A12', 'road'], ['civitavecchia', 'barcelona', 'Civitavecchia–Barcelona car ferry', 'ferry'],
+            ['istanbul', 'bandirma', 'Istanbul–Bandırma car ferry', 'ferry'], ['riga', 'stockholm', 'Riga–Stockholm car ferry', 'ferry'],
+            ['narvik', 'kiruna', 'E10', 'e'], ['kiruna', 'gallivare', 'E10', 'e'], ['gallivare', 'lulea', 'E10', 'e']
+        ];
+
+        const eRoadCount = node => new Set(node.e.map(segment => segment.split(' ')[0])).size;
+        const scoreFor = node => 10 * Math.log10(node.population) + 4 * eRoadCount(node) + node.au.length + 0.35 * node.m.length + 2.5 * node.j + (node.ferry ? 1.5 : 0) + 1.5 * (node.eTermini?.length || 0);
+        nodes.forEach(node => { node.eRoadCount = eRoadCount(node); node.eTerminusBonus = 1.5 * (node.eTermini?.length || 0); node.score = scoreFor(node); node.priority = node.e.length >= 3; });
+        let sortDescending = true;
+        let activeFilter = 'all';
+        let selectedId = null;
+        let searchTerm = '';
+        const nodeById = new Map(nodes.map(node => [node.id, node]));
+        const listElement = document.getElementById('node-list');
+        const detailElement = document.getElementById('detail-panel');
+        const map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([53, 12], 4);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+        const linkLayers = L.layerGroup().addTo(map);
+        const plannerRouteLayer = L.layerGroup().addTo(map);
+        const markerLayers = new Map();
+        const routeLayers = [];
+        const routeCodePattern = /(?:^|[^A-Z0-9])((?:E\d{1,3}|A-?\d{1,3}(?:\([A-Z]\))?|M\d{1,3}|D\d{1,3}|S\d{1,3}|AP-\d{1,3}|C-\d{1,3}|O-\d{1,3}|N\d{1,3}|RV\s?\d{1,3}|ROUTE\s?\d{1,3}))(?![A-Z0-9])/gi;
+        const routeCodesIn = label => [...label.matchAll(routeCodePattern)].map(match => match[1].toUpperCase().replace(/\s+/g, ' '));
+
+        links.forEach(([fromId, toId, label, type, via]) => {
+            const from = nodeById.get(fromId), to = nodeById.get(toId);
+            if (!from || !to) return;
+            const ferry = type === 'ferry';
+            const eRoad = type === 'e';
+            const baseStyle = {
+                color: ferry ? '#347da0' : eRoad ? '#b88429' : '#247455',
+                weight: ferry ? 1.7 : eRoad ? 1.8 : 1.2,
+                opacity: ferry ? .58 : eRoad ? .38 : .24,
+                dashArray: ferry ? '5 7' : null,
+                lineCap: 'round'
+            };
+            const routeCodes = new Set(routeCodesIn(label));
+            const coordinates = via ? [[from.lat, from.lon], via, [to.lat, to.lon]] : [[from.lat, from.lon], [to.lat, to.lon]];
+            const line = L.polyline(coordinates, baseStyle)
+                .bindTooltip(`${label}<br>${from.name} – ${to.name}`, { sticky: true, className: 'route-tooltip' });
+            linkLayers.addLayer(line);
+            const categories = new Set();
+            if (ferry) {
+                categories.add('ferry');
+            } else {
+                if ([...routeCodes].some(code => code.startsWith('E'))) categories.add('eroad');
+                if ([...routeCodes].some(code => code.startsWith('A') || code.startsWith('M')) || /\bmotorway\b/i.test(label)) categories.add('motorway');
+                if (!categories.size) categories.add('other');
+            }
+            routeLayers.push({ line, routeCodes, baseStyle, categories, fromId, toId, label, type, via });
+        });
+
+        const edgeFocus = document.getElementById('edge-focus');
+        const routeCounts = new Map();
+        routeLayers.forEach(({ routeCodes }) => routeCodes.forEach(code => routeCounts.set(code, (routeCounts.get(code) || 0) + 1)));
+        [...routeCounts.keys()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = `${code} · ${routeCounts.get(code)}`;
+            edgeFocus.append(option);
+        });
+
+        let selectedRoute = '';
+        const layerVisibility = { eroad: true, motorway: true, other: true, ferry: true };
+        const updateLinkStyles = () => {
+            let highlightedCount = 0;
+            routeLayers.forEach(({ line, routeCodes, baseStyle, categories }) => {
+                const visible = [...categories].some(category => layerVisibility[category]);
+                const matches = Boolean(selectedRoute && routeCodes.has(selectedRoute));
+                if (matches && visible) highlightedCount++;
+                if (!visible) {
+                    line.setStyle({ ...baseStyle, weight: 0, opacity: 0 });
+                } else {
+                    line.setStyle(selectedRoute
+                        ? { ...baseStyle, color: matches ? '#d95f36' : '#aeb4aa', weight: matches ? 5 : 1, opacity: matches ? .98 : .12 }
+                        : baseStyle);
+                    if (matches) line.bringToFront();
+                }
+            });
+            document.getElementById('route-focus-count').textContent = selectedRoute ? `${selectedRoute} · ${highlightedCount} EDGES` : '';
+        };
+
+        edgeFocus.addEventListener('change', () => {
+            selectedRoute = edgeFocus.value;
+            updateLinkStyles();
+        });
+
+        const plannerPanel = document.getElementById('planner-panel');
+        const plannerToggle = document.getElementById('planner-toggle');
+        const plannerResult = document.getElementById('planner-result');
+        const routeOrigin = document.getElementById('route-origin');
+        const routeDestination = document.getElementById('route-destination');
+        const routeAllowFerries = document.getElementById('route-allow-ferries');
+
+        [...nodes].sort((a, b) => a.name.localeCompare(b.name)).forEach(node => {
+            [routeOrigin, routeDestination].forEach(select => {
+                const option = document.createElement('option');
+                option.value = node.id;
+                option.textContent = `${node.name} (${node.code})`;
+                select.append(option);
+            });
+        });
+
+        function geographicDistanceKm(first, second) {
+            const radians = degrees => degrees * Math.PI / 180;
+            const lat1 = radians(first.lat), lat2 = radians(second.lat);
+            const deltaLat = lat2 - lat1, deltaLon = radians(second.lon - first.lon);
+            const arc = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
+            return 6371 * 2 * Math.atan2(Math.sqrt(arc), Math.sqrt(1 - arc));
+        }
+
+        function estimatedEdgeDistanceKm(edge) {
+            const from = nodeById.get(edge.fromId), to = nodeById.get(edge.toId);
+            const points = [[from.lat, from.lon], ...(edge.via ? [edge.via] : []), [to.lat, to.lon]];
+            let distance = 0;
+            for (let index = 1; index < points.length; index++) {
+                distance += geographicDistanceKm(
+                    { lat: points[index - 1][0], lon: points[index - 1][1] },
+                    { lat: points[index][0], lon: points[index][1] }
+                );
+            }
+            const roadFactor = edge.type === 'ferry' ? 1.08 : edge.type === 'e' ? 1.2 : 1.32;
+            return distance * roadFactor;
+        }
+
+        const plannerEdges = routeLayers.map(edge => ({ ...edge, distanceKm: estimatedEdgeDistanceKm(edge) }));
+
+        function findShortestRoute(originId, destinationId, allowFerries) {
+            const distances = new Map(nodes.map(node => [node.id, Infinity]));
+            const previous = new Map();
+            const visited = new Set();
+            distances.set(originId, 0);
+
+            while (visited.size < nodes.length) {
+                let currentId = null;
+                let currentDistance = Infinity;
+                distances.forEach((distance, id) => {
+                    if (!visited.has(id) && distance < currentDistance) {
+                        currentId = id;
+                        currentDistance = distance;
+                    }
+                });
+                if (currentId === null || currentId === destinationId) break;
+                visited.add(currentId);
+
+                plannerEdges.forEach(edge => {
+                    if (!allowFerries && edge.type === 'ferry') return;
+                    const nextId = edge.fromId === currentId ? edge.toId : edge.toId === currentId ? edge.fromId : null;
+                    if (!nextId || visited.has(nextId)) return;
+                    const candidate = currentDistance + edge.distanceKm;
+                    if (candidate < distances.get(nextId)) {
+                        distances.set(nextId, candidate);
+                        previous.set(nextId, { nodeId: currentId, edge });
+                    }
+                });
+            }
+
+            if (!Number.isFinite(distances.get(destinationId))) return null;
+            const nodeIds = [destinationId], edges = [];
+            let currentId = destinationId;
+            while (currentId !== originId) {
+                const step = previous.get(currentId);
+                if (!step) return null;
+                edges.unshift(step.edge);
+                currentId = step.nodeId;
+                nodeIds.unshift(currentId);
+            }
+            return { nodeIds, edges, distanceKm: distances.get(destinationId) };
+        }
+
+        function clearPlannedRoute() {
+            plannerRouteLayer.clearLayers();
+            plannerResult.hidden = true;
+            plannerResult.replaceChildren();
+        }
+
+        document.getElementById('find-route').addEventListener('click', () => {
+            plannerRouteLayer.clearLayers();
+            plannerResult.hidden = false;
+            const originId = routeOrigin.value, destinationId = routeDestination.value;
+            if (!originId || !destinationId) {
+                plannerResult.innerHTML = '<p class="planner-error">Choose both a start and destination.</p>';
+                return;
+            }
+            if (originId === destinationId) {
+                plannerResult.innerHTML = '<p class="planner-error">Choose two different places.</p>';
+                return;
+            }
+
+            const route = findShortestRoute(originId, destinationId, routeAllowFerries.checked);
+            if (!route) {
+                plannerResult.innerHTML = '<p class="planner-error">No connected route found with these options.</p>';
+                return;
+            }
+
+            const routeBounds = [];
+            route.edges.forEach(edge => {
+                const from = nodeById.get(edge.fromId), to = nodeById.get(edge.toId);
+                const coordinates = [[from.lat, from.lon], ...(edge.via ? [edge.via] : []), [to.lat, to.lon]];
+                routeBounds.push(...coordinates);
+                L.polyline(coordinates, {
+                    color: '#d95f36',
+                    weight: 5,
+                    opacity: .96,
+                    dashArray: edge.type === 'ferry' ? '8 7' : null,
+                    lineCap: 'round'
+                }).bindTooltip(`${escapeHtml(edge.label)}<br>${escapeHtml(from.name)} – ${escapeHtml(to.name)}`)
+                    .addTo(plannerRouteLayer);
+            });
+
+            const stopNames = route.nodeIds.map(id => nodeById.get(id).name);
+            const legRows = route.edges.map(edge => {
+                const from = nodeById.get(edge.fromId), to = nodeById.get(edge.toId);
+                return `<div>${escapeHtml(from.name)} → ${escapeHtml(to.name)} <span class="score-caption">${escapeHtml(edge.label)}</span></div>`;
+            }).join('');
+            const ferryCount = route.edges.filter(edge => edge.type === 'ferry').length;
+            plannerResult.innerHTML = `<p class="planner-result-title">${escapeHtml(stopNames[0])} to ${escapeHtml(stopNames[stopNames.length - 1])}</p><div class="planner-result-meta">${Math.round(route.distanceKm)} km estimated · ${route.edges.length} legs${ferryCount ? ` · ${ferryCount} ferry` : ''}</div><div class="planner-stops">${legRows}</div>`;
+
+            selectedRoute = '';
+            edgeFocus.value = '';
+            updateLinkStyles();
+            map.fitBounds(L.latLngBounds(routeBounds).pad(.18), { maxZoom: 8 });
+        });
+
+        document.getElementById('clear-route').addEventListener('click', clearPlannedRoute);
+        plannerToggle.addEventListener('click', () => {
+            plannerPanel.hidden = !plannerPanel.hidden;
+            plannerToggle.setAttribute('aria-expanded', String(!plannerPanel.hidden));
+        });
+        document.getElementById('close-planner').addEventListener('click', () => {
+            plannerPanel.hidden = true;
+            plannerToggle.setAttribute('aria-expanded', 'false');
+        });
+
+        document.querySelectorAll('[data-layer]').forEach(input => input.addEventListener('change', () => {
+            layerVisibility[input.dataset.layer] = input.checked;
+            updateLinkStyles();
+        }));
+
+        const layerPanel = document.getElementById('layer-panel');
+        const layersToggle = document.getElementById('layers-toggle');
+        layersToggle.addEventListener('click', () => {
+            layerPanel.hidden = !layerPanel.hidden;
+            layersToggle.setAttribute('aria-expanded', String(!layerPanel.hidden));
+        });
+
+        const renderMarkers = () => {
+            const minScore = Math.min(...nodes.map(node => node.score));
+            const maxScore = Math.max(...nodes.map(node => node.score));
+            nodes.forEach(node => {
+                const scorePosition = (node.score - minScore) / (maxScore - minScore || 1);
+                const radius = 4 + 8 * Math.sqrt(scorePosition);
+                const marker = L.circleMarker([node.lat, node.lon], {
+                    radius,
+                    color: '#fffefa',
+                    weight: 2,
+                    fillColor: '#247455',
+                    fillOpacity: 1
+                }).bindTooltip(`${node.name} · ${Math.round(node.score)} pts`, { direction: 'top', offset: [0, -7] });
+                marker.on('click', () => selectNode(node.id, true));
+                marker.addTo(map);
+                markerLayers.set(node.id, marker);
+            });
+        };
+        renderMarkers();
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+        }
+
+        function renderList() {
+            const visible = nodes.filter(node => {
+                const matchesFilter = activeFilter === 'all' || (activeFilter === 'priority' ? node.priority : node.ferry);
+                const haystack = [node.name, node.country, node.code, ...node.e, ...(node.eTermini || []), ...node.au, ...node.m, node.ferryLabel || ''].join(' ').toLowerCase();
+                return matchesFilter && haystack.includes(searchTerm);
+            }).sort((a, b) => sortDescending ? b.score - a.score : a.score - b.score);
+            document.getElementById('result-count').textContent = `${visible.length} / ${nodes.length} NODES`;
+            listElement.innerHTML = visible.length ? visible.map((node, index) => `
+        <button class="node-row" role="listitem" data-node="${node.id}" aria-current="${selectedId === node.id}">
+          <span class="row-rank">${String(index + 1).padStart(2, '0')}</span>
+          <span class="row-main"><span class="row-city">${escapeHtml(node.name)}${node.priority ? '<span class="priority-star" title="3 or more directional E-road segments">◆</span>' : ''}<span class="country-code">${node.code}</span></span><span class="row-detail"><span>${node.e.length} SEG / ${node.eRoadCount} E</span><span>·</span><span>${node.j} JCT</span>${node.ferry ? '<span>· FERRY</span>' : ''}</span></span>
+          <span class="row-score">${Math.round(node.score)}</span>
+        </button>`).join('') : '<div class="empty-state">No nodes match. Try another place or road.</div>';
+            listElement.querySelectorAll('[data-node]').forEach(button => button.addEventListener('click', () => selectNode(button.dataset.node, true)));
+            document.getElementById('map-node-count').textContent = nodes.length;
+            document.getElementById('priority-count').textContent = nodes.filter(node => node.priority).length;
+        }
+
+        function selectNode(id, pan) {
+            const node = nodeById.get(id);
+            if (!node) return;
+            selectedId = id;
+            renderList();
+            if (pan) map.flyTo([node.lat, node.lon], Math.max(map.getZoom(), 6), { duration: .55 });
+            detailElement.hidden = false;
+            const populationText = node.population >= 1000000 ? `${(node.population / 1000000).toFixed(1)}M` : `${Math.round(node.population / 1000)}k`;
+            const segmentTags = node.e.map(segment => `<span class="route-tag">${escapeHtml(segment)}</span>`).join('');
+            const motorwayTags = [...node.au.map(route => `<span class="route-tag motorway">${escapeHtml(route)}</span>`), ...node.m.map(route => `<span class="route-tag motorway">${escapeHtml(route)}</span>`)].join('');
+            detailElement.innerHTML = `
+        <div class="detail-top"><div><p class="detail-country">${node.code} · ${escapeHtml(node.country)}</p><h2 class="detail-name">${escapeHtml(node.name)}</h2></div><button class="close-button" id="close-detail" title="Close details" aria-label="Close details">×</button></div>
+        <div class="detail-scoreline"><strong class="detail-score">${node.score.toFixed(1)}</strong><span class="score-caption">priority points${node.priority ? ' · 3+ E segments' : ''}</span></div>
+        ${node.locationNote ? `<div class="detail-section"><p class="detail-label">Location accuracy</p><p class="planner-note">${escapeHtml(node.locationNote)}</p></div>` : ''}
+        <div class="detail-section"><p class="detail-label">European road segments · ${node.e.length} segments / ${node.eRoadCount} E-roads</p><div class="detail-tags">${segmentTags || '<span class="score-caption">None listed</span>'}</div></div>
+        <div class="detail-section"><p class="detail-label">Motorway corridors</p><div class="detail-tags">${motorwayTags || '<span class="score-caption">None listed</span>'}</div></div>
+        ${node.ferry ? `<div class="detail-section"><p class="detail-label">Car-ferry connection</p><div class="detail-tags"><span class="route-tag ferry">${escapeHtml(node.ferryLabel)}</span><span class="route-tag ferry">+1.5</span></div></div>` : ''}
+        <div class="detail-section"><p class="detail-label">Score inputs</p><div class="stat-grid"><div class="stat-cell"><span class="stat-value">${populationText}</span><span class="stat-name">agglomeration pop.</span></div><div class="stat-cell"><span class="stat-value">${node.j}</span><span class="stat-name">significant junctions</span></div></div></div>
+        <div class="detail-section score-breakdown"><p class="detail-label">Calculation</p><div class="score-row"><span>10 log₁₀(${node.population.toLocaleString('en-US')})</span><strong>${(10 * Math.log10(node.population)).toFixed(1)}</strong></div><div class="score-row"><span>4 × ${node.eRoadCount} distinct E-roads</span><strong>${(4 * node.eRoadCount).toFixed(1)}</strong></div><div class="score-row"><span>1 × ${node.au.length} non-German motorways</span><strong>${node.au.length.toFixed(1)}</strong></div><div class="score-row"><span>0.35 × ${node.m.length} Autobahns</span><strong>${(0.35 * node.m.length).toFixed(1)}</strong></div><div class="score-row"><span>2.5 × ${node.j} junctions</span><strong>${(2.5 * node.j).toFixed(1)}</strong></div>${node.ferry ? '<div class="score-row"><span>International ferry</span><strong>1.5</strong></div>' : ''}${node.eTerminusBonus ? `<div class="score-row"><span>Verified E-road termini (${escapeHtml(node.eTermini.join(', '))})</span><strong>${node.eTerminusBonus.toFixed(1)}</strong></div>` : ''}<div class="score-row score-total"><span>Total</span><strong>${node.score.toFixed(1)}</strong></div></div>`;
+            document.getElementById('close-detail').addEventListener('click', () => { detailElement.hidden = true; selectedId = null; renderList(); });
+            if (window.innerWidth <= 760) document.getElementById('sidebar').classList.remove('mobile-open');
+        }
+
+        document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => {
+            activeFilter = button.dataset.filter;
+            document.querySelectorAll('[data-filter]').forEach(chip => chip.setAttribute('aria-pressed', String(chip === button)));
+            renderList();
+        }));
+        document.getElementById('search').addEventListener('input', event => { searchTerm = event.target.value.trim().toLowerCase(); renderList(); });
+        document.getElementById('sort-button').addEventListener('click', event => {
+            sortDescending = !sortDescending;
+            event.currentTarget.textContent = sortDescending ? 'SCORE ↓' : 'SCORE ↑';
+            renderList();
+        });
+        document.getElementById('fit-button').addEventListener('click', () => map.fitBounds(L.latLngBounds(nodes.map(node => [node.lat, node.lon])).pad(.06), { maxZoom: 5 }));
+        document.getElementById('mobile-list-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
+        const methodPanel = document.getElementById('method-panel');
+        document.querySelector('.method-button').addEventListener('click', () => { methodPanel.hidden = !methodPanel.hidden; });
+        document.addEventListener('keydown', event => {
+            if (event.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) { event.preventDefault(); document.getElementById('search').focus(); }
+            if (event.key === 'Escape') {
+                detailElement.hidden = true;
+                methodPanel.hidden = true;
+                plannerPanel.hidden = true;
+                plannerToggle.setAttribute('aria-expanded', 'false');
+                layerPanel.hidden = true;
+                layersToggle.setAttribute('aria-expanded', 'false');
+                document.getElementById('sidebar').classList.remove('mobile-open');
+                selectedId = null;
+                renderList();
+            }
+        });
+        window.addEventListener('resize', () => map.invalidateSize());
+        map.on('tileerror', () => { if (!window.navigator.onLine) document.getElementById('fallback').style.display = 'grid'; });
+        renderList();
+        map.fitBounds(L.latLngBounds(nodes.map(node => [node.lat, node.lon])).pad(.06), { maxZoom: 5 });
+        window.setTimeout(() => map.invalidateSize(), 50);
+    </script>
+</body>
+
+</html>
